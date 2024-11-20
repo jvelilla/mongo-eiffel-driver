@@ -18,8 +18,7 @@ feature {NONE} -- Initialization
 	make
 			-- Run application.
 		do
-----			test_connection
-----			example_client
+--			example_client
 			tutorial
 		end
 
@@ -28,7 +27,7 @@ feature {NONE} -- Initialization
 			l_tutorial: MONGODB_TUTORIAL
 		do
 			create l_tutorial
-			l_tutorial.test_server_description
+--			l_tutorial.test_server_description
 --			l_tutorial.test_create_read_concern
 --			l_tutorial.test_read_prefernces
 --			l_tutorial.tutorial_find_databases_with_opts
@@ -37,7 +36,7 @@ feature {NONE} -- Initialization
 --			l_tutorial.tutorial_all_databases
 --			l_tutorial.tutorial_api
 --			l_tutorial.insert_document
---			l_tutorial.find_documents
+			l_tutorial.find_documents
 --			l_tutorial.find_specific_document
 --			l_tutorial.update_document
 --			l_tutorial.count_documents

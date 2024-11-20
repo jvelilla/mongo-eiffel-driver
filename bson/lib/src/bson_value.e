@@ -12,6 +12,9 @@ class
 inherit
 
 	BSON_WRAPPER_BASE
+		rename
+			make as memory_make
+		end
 
 create
 	make, make_by_pointer

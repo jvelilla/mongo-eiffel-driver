@@ -124,7 +124,7 @@ feature {NONE} -- Initialization
 						create l_books_mgr.make (mongodb_client)
 						if attached l_books_mgr.find_doument_by_id (l_id.value) then
 							if 	attached {BOOK} extract_data_from_json (req) as l_book then
-								create l_books_mgr.make (mongodb_client)
+								l_book.set_id (l_id.value)
 								l_books_mgr.update_document (l_book)
 								if l_books_mgr.has_error then
 									handle_internal_server_error ("{%"error%":%"Database Server Error:[" + l_books_mgr.error_message +"] %"}", req, res)

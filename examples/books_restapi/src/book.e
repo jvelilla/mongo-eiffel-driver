@@ -40,6 +40,14 @@ feature {NONE} -- Initialization
 			image_set: image.is_case_insensitive_equal (a_image)
 		end
 
+feature -- Set ID
+
+	set_id (a_id: READABLE_STRING_32)
+		do
+			create id.make_with_string (a_id)
+		end
+
+
 feature -- Access
 
 	id: BSON_OID
