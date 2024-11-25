@@ -12,7 +12,7 @@
 			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
 		</option>
 		<setting name="console_application" value="true"/>
-		<external_include location="$ECF_CONFIG_PATH\..\..\C\mongo-c-driver\include\libbson-1.0">
+		<external_include location="$ECF_CONFIG_PATH\..\..\C\driver\include\libbson-1.0">
 			<condition>
 				<platform value="windows"/>
 			</condition>
@@ -23,7 +23,7 @@
 			</condition>
 		</external_include>
 
-		<external_object location="$ECF_CONFIG_PATH\..\..\C\mongo-c-driver\lib\bson-1.0.lib">
+		<external_object location="$ECF_CONFIG_PATH\..\..\C\driver\lib\bson-1.0.lib">
 			<condition>
 				<platform value="windows"/>
 			</condition>
