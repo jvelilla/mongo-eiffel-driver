@@ -477,5 +477,68 @@ feature -- Test routines
 				l_bson.bson_as_relaxed_extended_json.same_string (l_expected.bson_as_relaxed_extended_json))
 		end
 
+	test_bson_append_iter
+			-- Test appending BSON elements using iterator
+		local
+			l_iter: BSON_ITERATOR
+			l_source: BSON
+			l_target: BSON
+		do
+				-- Create and populate source document
+			create l_source.make
+			l_source.bson_append_integer_32 ("a", 1)
+			l_source.bson_append_integer_32 ("b", 2)
+			l_source.bson_append_integer_32 ("c", 3)
+			l_source.bson_append_utf8 ("d", "hello")
+
+				-- Create target document
+			create l_target.make
+
+				-- Create iterator
+			create l_iter.make
+
+				-- Find and append "a" with same key
+			l_iter.bson_iter_init (l_source)
+			assert ("Should find key 'a'", l_iter.bson_iter_find ("a"))
+			assert ("Should be int32 type", l_iter.is_int32)
+			l_target.bson_append_iter (Void, l_iter)
+
+				-- Find and append "c" with same key
+			l_iter.bson_iter_init (l_source)
+			assert ("Should find key 'c'", l_iter.bson_iter_find ("c"))
+			assert ("Should be int32 type", l_iter.is_int32)
+			l_target.bson_append_iter (Void, l_iter)
+
+				-- Find and append "d" with different key "world"
+			l_iter.bson_iter_init (l_source)
+			assert ("Should find key 'd'", l_iter.bson_iter_find ("d"))
+			assert ("Should be utf8 type", l_iter.is_utf8)
+			l_target.bson_append_iter ("world", l_iter)
+
+				-- Verify the resulting document
+			l_iter.bson_iter_init (l_target)
+			
+				-- Check first element ("a": 1)
+			assert ("Should have first element", l_iter.bson_iter_next)
+			assert ("First key should be 'a'", l_iter.bson_iter_key.same_string ("a"))
+			assert ("First value should be int32", l_iter.is_int32)
+			assert ("First value should be 1", l_iter.bson_iter_int32 = 1)
+
+				-- Check second element ("c": 3)
+			assert ("Should have second element", l_iter.bson_iter_next)
+			assert ("Second key should be 'c'", l_iter.bson_iter_key.same_string ("c"))
+			assert ("Second value should be int32", l_iter.is_int32)
+			assert ("Second value should be 3", l_iter.bson_iter_int32 = 3)
+
+				-- Check third element ("world": "hello")
+			assert ("Should have third element", l_iter.bson_iter_next)
+			assert ("Third key should be 'world'", l_iter.bson_iter_key.same_string ("world"))
+			assert ("Third value should be utf8", l_iter.is_utf8)
+			assert ("Third value should be 'hello'", l_iter.bson_iter_utf8.same_string ("hello"))
+
+				-- Verify no more elements
+			assert ("Should not have more elements", not l_iter.bson_iter_next)
+		end
+
 end
 
