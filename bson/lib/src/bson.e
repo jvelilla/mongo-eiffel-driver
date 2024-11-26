@@ -63,6 +63,9 @@ feature -- Access
  			Result := c_bson_len (item)
  		end
 
+ 	valid_option_characters: STRING_32 = "imxlsu"
+		-- Valid characters for regex options	
+
 feature -- Operations
 
 	bson_append_utf8 (a_key: STRING_32; a_value: STRING_32)
@@ -125,17 +128,22 @@ feature -- Operations
 			l_res := c_bson_append_code (item, c_key.item, c_key.count, c_value.item)
 		end
 
-	bson_append_code_scope (a_key: STRING_32; a_value: STRING_32; a_scope: BSON)
+	bson_append_code_scope (a_key: STRING_32; a_value: STRING_32; a_scope: detachable BSON)
 		note
 			EIS: "name=bson_append_code_scope", "src=https://mongoc.org/libbson/current/bson_append_code_scope.html", "protocol=url"
 		local
 			c_key: C_STRING
 			c_value: C_STRING
 			l_res: BOOLEAN
+			l_scope: POINTER
 		do
+			l_scope := default_pointer
+			if attached a_scope then
+				l_scope := a_scope.item
+			end
 			create c_key.make (a_key)
 			create c_value.make (a_value)
-			l_res := c_bson_append_code_scope (item, c_key.item, c_key.count, c_value.item, a_scope.item)
+			l_res := c_bson_append_code_scope (item, c_key.item, c_key.count, c_value.item, l_scope)
 		end
 
 	bson_append_double (a_key: STRING_32; a_value: REAL_64)
@@ -149,9 +157,12 @@ feature -- Operations
 			l_res := c_bson_append_double (item, c_key.item, c_key.count, a_value)
 		end
 
-	bson_append_binary (a_key: STRING_32; a_type:INTEGER; a_buffer: ARRAY [NATURAL_8])
+	bson_append_binary (a_key: STRING_32; a_type: INTEGER; a_buffer: ARRAY [NATURAL_8])
+			-- Append binary data with subtype `a_type` using the specified key `a_key` to current bson document.
 		note
 			EIS: "name=bson_append_binary", "src=http://mongoc.org/libbson/current/bson_append_binary.html", "protocol=uri"
+		require
+			valid_subtype: (create {BSON_SUBTYPE}).is_valid_subtype (a_type)
 		local
 			l_mgr: MANAGED_POINTER
 			l_key: C_STRING
@@ -209,17 +220,25 @@ feature -- Operations
 	bson_append_regex (a_key: STRING_32; a_regex: STRING_8; a_options: STRING_32)
 		note
 			EIS: "name=bson_append_regex", "src=http://mongoc.org/libbson/current/bson_append_regex.html", "protocol=uri"
+		require
+			valid_options: not a_options.is_empty implies across a_options as opt all
+				valid_option_characters.has (opt.item)
+			end
+			no_duplicate_options:  not a_options.is_empty implies across a_options as opt all
+				a_options.occurrences (opt.item) = 1
+			end
 		local
 			c_key: C_STRING
 			l_res: BOOLEAN
 			c_regex: C_STRING
 			c_options: C_STRING
 		do
-			-- TODO validate the valid characters for options.
 			create c_regex.make (a_regex)
 			create c_options.make (a_options)
 			create c_key.make (a_key)
 			l_res := c_bson_append_regex (item, c_key.item, c_key.count, c_regex.item, c_options.item)
+		ensure
+			length_increased: old len <= len
 		end
 
 	bson_append_decimal128 (a_key: STRING_32; a_dec: BSON_DECIMAL_128)
@@ -282,6 +301,28 @@ feature -- Operations
 			l_res := c_bson_append_now_utc (item, c_key.item, c_key.count)
 
 		end
+
+
+    bson_append_timeval (a_key: STRING_32; a_seconds: INTEGER_64; a_microseconds: INTEGER)
+            -- Append a time value with microsecond precision using the specified key `a_key`.
+            -- `a_seconds`: Number of seconds since Unix epoch
+            -- `a_microseconds`: Additional microseconds (0-999999)
+        note
+            EIS: "name=bson_append_timeval", "src=https://mongoc.org/libbson/current/bson_append_timeval.html", "protocol=url"
+        require
+            valid_microseconds: a_microseconds >= 0 and a_microseconds < 1_000_000
+        local
+            c_key: C_STRING
+            l_res: BOOLEAN
+            l_milliseconds: INTEGER_64
+        do
+            create c_key.make (a_key)
+                -- Convert to milliseconds for BSON date format
+            l_milliseconds := (a_seconds * 1000) + (a_microseconds // 1000)
+            l_res := c_bson_append_date_time (item, c_key.item, c_key.count, l_milliseconds)
+        ensure
+            length_increased: old len <= len
+        end
 
 feature -- Append Document
 
@@ -804,6 +845,20 @@ feature {NONE} -- C externals
 			]"
 		end
 
+	c_bson_append_timeval (a_bson: POINTER; a_key: POINTER; a_key_length: INTEGER; a_value: POINTER): BOOLEAN
+		external
+			"C inline use <bson/bson.h>"
+		alias
+			"return bson_append_timeval ((bson_t *)$a_bson, (const char *)$a_key, (int)$a_key_length, (struct timeval *)$a_value);"
+		end
+
+	c_bson_append_undefined (a_bson: POINTER; a_key: POINTER; a_key_length: INTEGER): BOOLEAN
+		external
+			"C inline use <bson/bson.h>"
+		alias
+			"return bson_append_undefined ((bson_t *)$a_bson, (const char *)$a_key, (int)$a_key_length);"
+		end
+
 	c_bson_destroy (a_bson: POINTER)
 		external "C inline use <bson/bson.h>"
 		alias
@@ -816,17 +871,7 @@ feature {NONE} -- C externals
 -- TODO the following functions are not wrapped.
 -- Check which ones are really needed.
 
---	bool
---bson_append_timeval (bson_t *bson,
---                     const char *key,
---                     int key_length,
---                     struct timeval *value);
-
---bool
---bson_append_undefined (bson_t *bson, const char *key, int key_length);
-
-
---bool
+	--bool
 --bson_append_value (bson_t *bson,
 --                   const char *key,
 --                   int key_length,
@@ -883,4 +928,7 @@ feature {NONE} -- C externals
 --bson_validate_with_error (const bson_t *bson,
 --                          bson_validate_flags_t flags,
 --                          bson_error_t *error);
+
+
+
 end
