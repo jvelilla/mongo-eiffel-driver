@@ -517,7 +517,7 @@ feature -- Test routines
 
 				-- Verify the resulting document
 			l_iter.bson_iter_init (l_target)
-			
+
 				-- Check first element ("a": 1)
 			assert ("Should have first element", l_iter.bson_iter_next)
 			assert ("First key should be 'a'", l_iter.bson_iter_key.same_string ("a"))
@@ -538,6 +538,196 @@ feature -- Test routines
 
 				-- Verify no more elements
 			assert ("Should not have more elements", not l_iter.bson_iter_next)
+		end
+
+	test_bson_append_timestamp
+			-- Test appending timestamp value to BSON documents
+		local
+			l_bson: BSON
+			l_expected: BSON
+		do
+				-- Create a new BSON document
+			create l_bson.make
+
+				-- Append timestamp (1234 seconds, 9876 increment)
+			l_bson.bson_append_timestamp ("timestamp", 1234, 9876)
+
+				-- Create the expected BSON document from JSON
+			create l_expected.make_from_json ({STRING_8}
+					"{ %"timestamp%" : { %"$timestamp%" : { %"t%" : 1234, %"i%" : 9876 } } }")
+
+				-- Verify the documents are equal
+			assert ("Documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Additional verification through JSON representation
+			assert ("JSON representation should match",
+				l_bson.bson_as_json.same_string (l_expected.bson_as_json))
+		end
+
+	test_bson_append_maxkey
+			-- Test appending maxkey value to BSON documents
+		local
+			l_bson: BSON
+			l_expected: BSON
+		do
+				-- Create a new BSON document
+			create l_bson.make
+
+				-- Append maxkey
+			l_bson.bson_append_maxkey ("maxkey")
+
+				-- Create the expected BSON document from JSON
+			create l_expected.make_from_json ({STRING_8}
+					"{ %"maxkey%" : { %"$maxKey%" : 1 } }")
+
+				-- Verify the documents are equal
+			assert ("Documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Additional verification through JSON representation
+			assert ("JSON representation should match",
+				l_bson.bson_as_json.same_string (l_expected.bson_as_json))
+		end
+
+	test_bson_append_minkey
+			-- Test appending minkey value to BSON documents
+		local
+			l_bson: BSON
+			l_expected: BSON
+		do
+				-- Create a new BSON document
+			create l_bson.make
+
+				-- Append minkey
+			l_bson.bson_append_minkey ("minkey")
+
+				-- Create the expected BSON document from JSON
+			create l_expected.make_from_json ({STRING_8}
+					"{ %"minkey%" : { %"$minKey%" : 1 } }")
+
+				-- Verify the documents are equal
+			assert ("Documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Additional verification through JSON representation
+			assert ("JSON representation should match",
+				l_bson.bson_as_json.same_string (l_expected.bson_as_json))
+		end
+
+	test_bson_append_general_basic_types
+			-- Test appending basic BSON types
+		local
+			l_bson: BSON
+			l_expected: BSON
+		do
+				-- Test int32
+			create l_bson.make
+			l_bson.bson_append_integer_32 ("int", 1)
+			create l_expected.make_from_json ({STRING_8} "{ %"int%" : 1 }")
+			assert ("Int32 documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test int64 with proper NumberLong format
+			create l_bson.make
+			l_bson.bson_append_integer_64 ("int64", 1)
+			create l_expected.make_from_json ({STRING_8} "{ %"int64%" : { %"$numberLong%" : %"1%" } }")
+			assert ("Int64 documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test larger int64 value
+			create l_bson.make
+			l_bson.bson_append_integer_64 ("int64_large", 9223372036854775807)  -- Max INT64
+			create l_expected.make_from_json ({STRING_8} 
+				"{ %"int64_large%" : { %"$numberLong%" : %"9223372036854775807%" } }")
+			assert ("Large Int64 documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test double
+			create l_bson.make
+			l_bson.bson_append_double ("double", 1.123)
+			create l_expected.make_from_json ({STRING_8} "{ %"double%" : 1.123 }")
+			assert ("Double documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test string
+			create l_bson.make
+			l_bson.bson_append_utf8 ("string", "some string")
+			create l_expected.make_from_json ({STRING_8} "{ %"string%" : %"some string%" }")
+			assert ("String documents should be equal", l_bson.bson_equal (l_expected))
+		end
+
+	test_bson_append_general_arrays
+			-- Test appending array types
+		local
+			l_bson: BSON
+			l_array: BSON
+			l_expected: BSON
+		do
+				-- Test array of integers
+			create l_bson.make
+			create l_array.make
+			l_array.bson_append_integer_32 ("0", 1)
+			l_array.bson_append_integer_32 ("1", 2)
+			l_array.bson_append_integer_32 ("2", 3)
+			l_array.bson_append_integer_32 ("3", 4)
+			l_array.bson_append_integer_32 ("4", 5)
+			l_array.bson_append_integer_32 ("5", 6)
+			l_bson.bson_append_array ("array[int]", l_array)
+			create l_expected.make_from_json ({STRING_8}
+				"{ %"array[int]%" : [1, 2, 3, 4, 5, 6] }")
+			assert ("Integer array documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test array of doubles
+			create l_bson.make
+			create l_array.make
+			l_array.bson_append_double ("0", 1.123)
+			l_array.bson_append_double ("1", 2.123)
+			l_bson.bson_append_array ("array[double]", l_array)
+			create l_expected.make_from_json ({STRING_8}
+				"{ %"array[double]%" : [1.123, 2.123] }")
+			assert ("Double array documents should be equal", l_bson.bson_equal (l_expected))
+		end
+
+	test_bson_append_general_complex
+			-- Test appending complex types
+		local
+			l_bson: BSON
+			l_subdoc: BSON
+			l_expected: BSON
+		do
+				-- Test embedded document
+			create l_bson.make
+			create l_subdoc.make
+			l_subdoc.bson_append_integer_32 ("int", 1)
+			l_bson.bson_append_document ("document", l_subdoc)
+			create l_expected.make_from_json ({STRING_8}
+				"{ %"document%" : { %"int%" : 1 } }")
+			assert ("Embedded document should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test null
+			create l_bson.make
+			l_bson.bson_append_null ("null")
+			create l_expected.make_from_json ({STRING_8} "{ %"null%" : null }")
+			assert ("Null document should be equal", l_bson.bson_equal (l_expected))
+
+				-- Test regex
+			create l_bson.make
+			l_bson.bson_append_regex ("regex", "1234", "i")
+			create l_expected.make_from_json ({STRING_8}
+				"{ %"regex%" : { %"$regex%" : %"1234%", %"$options%" : %"i%" } }")
+			assert ("Regex document should be equal", l_bson.bson_equal (l_expected))
+		end
+
+	test_bson_append_general_mixed_array
+			-- Test appending mixed type array
+		local
+			l_bson: BSON
+			l_array: BSON
+			l_expected: BSON
+		do
+			create l_bson.make
+			create l_array.make
+			l_array.bson_append_utf8 ("0", "awesome")
+			l_array.bson_append_double ("1", 5.05)
+			l_array.bson_append_integer_32 ("2", 1986)
+			l_bson.bson_append_array ("BSON", l_array)
+			create l_expected.make_from_json ({STRING_8}
+				"{ %"BSON%" : [%"awesome%", 5.05, 1986] }")
+			assert ("Mixed array document should be equal", l_bson.bson_equal (l_expected))
 		end
 
 end
