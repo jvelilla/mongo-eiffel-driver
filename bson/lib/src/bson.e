@@ -564,6 +564,15 @@ feature -- Removal
 
 feature -- Measurement
 
+	 bson_max_size: INTEGER_32
+            -- The maximum size in bytes of a BSON document.
+            -- This limit exists because BSON uses a 32-bit integer for document lengths.
+        do
+            Result := {INTEGER_32}.max_value  -- This is (2^31 - 1)
+        ensure
+        	instance_free: class
+        end
+
 	structure_size: INTEGER
 		external
 			"C inline use <bson/bson.h>"
@@ -907,4 +916,7 @@ feature {NONE} -- C externals
             "return bson_validate_with_error ((const bson_t *)$a_bson, (bson_validate_flags_t)$a_flags, (bson_error_t *)$a_error);"
         end
 
+invariant
+    max_size_positive: True -- current bson size is > 0
+    max_size_within_int32: True -- current bson size is <= max_bson_sise = {INTEGER_32}.max_value
 end
