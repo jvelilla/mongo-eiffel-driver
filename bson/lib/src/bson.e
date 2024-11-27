@@ -481,6 +481,32 @@ feature -- Status Report
 			Result := c_bson_has_field (item, l_str.item)
 		end
 
+    bson_validate (flags: INTEGER): BOOLEAN
+            -- Validates a BSON document by walking through the document and inspecting
+            -- the keys and values for valid content.
+            -- `flags`: A bitwise-or of all desired bson_validate_flags_t.
+            -- Returns: True if document passes the requested validations, False otherwise.
+        note
+            EIS: "name=bson_validate", "src=https://mongoc.org/libbson/current/bson_validate.html", "protocol=uri"
+        local
+            l_offset: POINTER
+        do
+            Result := c_bson_validate (item, flags, l_offset)
+        end
+
+    bson_validate_with_error (flags: INTEGER): BOOLEAN
+            -- Validates a BSON document with detailed error reporting.
+            -- `flags`: A bitwise-or of all desired bson_validate_flags_t.
+            -- Returns: True if document passes the requested validations, False otherwise.
+        note
+            EIS: "name=bson_validate_with_error", "src=https://mongoc.org/libbson/current/bson_validate_with_error.html", "protocol=uri"
+        local
+            l_error: BSON_ERROR
+        do
+            create l_error.make
+            Result := c_bson_validate_with_error (item, flags, l_error.item)
+        end
+
 feature -- BSON to JSON
 
 	bson_as_json: STRING
@@ -867,68 +893,18 @@ feature {NONE} -- C externals
 			]"
 		end
 
+    c_bson_validate (a_bson: POINTER; a_flags: INTEGER; a_offset: POINTER): BOOLEAN
+        external
+            "C inline use <bson/bson.h>"
+        alias
+            "return bson_validate ((const bson_t *)$a_bson, (bson_validate_flags_t)$a_flags, (size_t *)$a_offset);"
+        end
 
--- TODO the following functions are not wrapped.
--- Check which ones are really needed.
-
-	--bool
---bson_append_value (bson_t *bson,
---                   const char *key,
---                   int key_length,
---                   const bson_value_t *value)
-
-
---char *
---bson_array_as_canonical_extended_json (const bson_t *bson, size_t *length);
-
-
---char *
---bson_array_as_legacy_extended_json (const bson_t *bson, size_t *length)
-
---char *
---bson_array_as_relaxed_extended_json (const bson_t *bson, size_t *length);
-
---char *
---bson_as_json_with_opts (const bson_t *bson, size_t *length, const bson_json_opts_t *opts);
-
---char *
---bson_as_legacy_extended_json (const bson_t *bson, size_t *length)
-
---void
---bson_copy_to_excluding_noinit_va (const bson_t *src,
---                                  bson_t *dst,
---                                  const char *first_exclude,
---                                  va_list args);
-
---uint8_t *
---bson_destroy_with_steal (bson_t *bson, bool steal, uint32_t *length);
-
---bson_t *
---bson_new_from_buffer (uint8_t **buf,
---                      size_t *buf_len,
---                      bson_realloc_func realloc_func,
---                      void *realloc_func_ctx);
-
---bson_t *
---bson_new_from_data (const uint8_t *data, size_t length);
-
---uint8_t *
---bson_reserve_buffer (bson_t *bson, uint32_t size);
-
---bson_t *
---bson_sized_new (size_t size);
-
---bool
---bson_steal (bson_t *dst, bson_t *src);
-
---bool
---bson_validate (const bson_t *bson, bson_validate_flags_t flags, size_t *offset);
-
---bool
---bson_validate_with_error (const bson_t *bson,
---                          bson_validate_flags_t flags,
---                          bson_error_t *error);
-
-
+    c_bson_validate_with_error (a_bson: POINTER; a_flags: INTEGER; a_error: POINTER): BOOLEAN
+        external
+            "C inline use <bson/bson.h>"
+        alias
+            "return bson_validate_with_error ((const bson_t *)$a_bson, (bson_validate_flags_t)$a_flags, (bson_error_t *)$a_error);"
+        end
 
 end

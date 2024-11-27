@@ -95,6 +95,12 @@ feature -- Type Checks
             Result := is_int32 or is_int64 or is_double
         end
 
+    is_bool: BOOLEAN
+            -- Does current iterator hold a boolean value?
+        do
+            Result := c_bson_iter_holds_bool (item)
+        end
+
 feature -- Access
 
     bson_iter_type: INTEGER
@@ -219,6 +225,30 @@ feature -- Access
             Result := l_string.string
         ensure
             result_not_void: Result /= Void
+        end
+
+    bson_iter_as_bool: BOOLEAN
+            -- Fetches the current field as if it were a boolean.
+            -- Will cast the following types to boolean:
+            -- * BSON_TYPE_BOOL
+            -- * BSON_TYPE_DOUBLE
+            -- * BSON_TYPE_INT32
+            -- * BSON_TYPE_INT64
+            -- * BSON_TYPE_NULL
+            -- * BSON_TYPE_UNDEFINED
+            -- * BSON_TYPE_UTF8 (always returns True)
+        do
+            Result := c_bson_iter_as_bool (item)
+        end
+
+    bson_iter_bool: BOOLEAN
+            -- Get the boolean value at the current iterator position
+        require
+            is_bool_value: is_bool
+        do
+            Result := c_bson_iter_bool (item)
+        ensure
+            valid_value: Result = c_bson_iter_bool (item)
         end
 
 feature {NONE} -- C externals
@@ -359,6 +389,24 @@ feature {NONE} -- C externals
 				*$a_length = length;
 				return result;
 			]"
+		end
+
+	c_bson_iter_holds_bool (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_BOOL ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_as_bool (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_as_bool ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_bool (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_bool ((const bson_iter_t *)$a_iter);"
 		end
 
 feature {NONE} -- Implementation

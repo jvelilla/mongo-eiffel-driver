@@ -774,5 +774,182 @@ feature -- Test routines
 				l_bson.bson_as_json.same_string (l_expected.bson_as_json))
 		end
 
+	test_bson_validate_dbref_invalid_basic
+			-- Test invalid DBRef documents - basic cases
+		local
+			l_dbref: BSON
+			l_child: BSON
+		do
+				-- Test $ref without $id
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: $ref without $id",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test $ref with non-id field
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("extra", "field")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: $ref with non-id field",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test $ref with $id at top level
+			create l_dbref.make
+			l_dbref.bson_append_utf8 ("$ref", "foo")
+			l_dbref.bson_append_utf8 ("$id", "bar")
+			assert ("Should fail: top-level $ref and $id",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+		end
+
+	test_bson_validate_dbref_invalid_ordering
+			-- Test invalid DBRef documents - ordering issues
+		local
+			l_dbref: BSON
+			l_child: BSON
+		do
+				-- Test incorrect field ordering
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("extra", "field")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("$id", "bar")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: incorrect field ordering",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test $ref with only $db
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("$db", "bar")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: $ref with only $db",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+		end
+
+	test_bson_validate_dbref_invalid_types
+			-- Test invalid DBRef documents - type issues
+		local
+			l_dbref: BSON
+			l_child: BSON
+		do
+				-- Test non-string $ref with $id
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_integer_32 ("$ref", 1)
+			l_child.bson_append_utf8 ("$id", "bar")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: non-string $ref with $id",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test non-string $db
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("$id", "bar")
+			l_child.bson_append_integer_32 ("$db", 1)
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should fail: non-string $db",
+				not l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+		end
+
+	test_bson_validate_dbref_valid
+			-- Test valid DBRef documents
+		local
+			l_dbref: BSON
+			l_child: BSON
+			l_child2: BSON
+		do
+				-- Test basic valid DBRef ($ref with $id)
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("$id", "bar")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should succeed: basic valid DBRef",
+				l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test nested DBRef
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child2 := l_child.bson_append_document_begin ("$id")
+			l_child2.bson_append_utf8 ("$ref", "foo2")
+			l_child2.bson_append_utf8 ("$id", "bar2")
+			l_child2.bson_append_utf8 ("$db", "baz2")
+			l_child.bson_append_document_end (l_child2)
+			l_child.bson_append_utf8 ("$db", "baz")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should succeed: nested DBRef",
+				l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+
+				-- Test complete valid DBRef with extra fields
+			create l_dbref.make
+			l_child := l_dbref.bson_append_document_begin ("dbref")
+			l_child.bson_append_utf8 ("$ref", "foo")
+			l_child.bson_append_utf8 ("$id", "bar")
+			l_child.bson_append_utf8 ("$db", "baz")
+			l_child.bson_append_utf8 ("extra", "field")
+			l_dbref.bson_append_document_end (l_child)
+			assert ("Should succeed: complete valid DBRef",
+				l_dbref.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_dollar_keys))
+		end
+
+	test_bson_validate_bool
+			-- Test validation and type conversion of boolean values in BSON documents
+		local
+			l_bson: BSON
+			l_iter: BSON_ITERATOR
+		do
+				-- Test valid boolean value (True)
+			create l_bson.make
+			l_bson.bson_append_boolean ("b", True)
+
+				-- Verify document is valid
+			assert ("Document should be valid",
+				l_bson.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_none))
+
+				-- Verify value through iterator
+			create l_iter.make
+			l_iter.bson_iter_init (l_bson)
+			assert ("Should have first element", l_iter.bson_iter_next)
+			assert ("Should hold boolean value", l_iter.is_bool)
+			assert ("Boolean value should be true", l_iter.bson_iter_bool)
+
+				-- Test valid boolean value (False)
+			create l_bson.make
+			l_bson.bson_append_boolean ("b", False)
+
+				-- Verify document is valid
+			assert ("Document should be valid",
+				l_bson.bson_validate ({BSON_VALIDATE_FLAGS}.bson_validate_none))
+
+				-- Verify value through iterator
+			create l_iter.make
+			l_iter.bson_iter_init (l_bson)
+			assert ("Should have first element", l_iter.bson_iter_next)
+			assert ("Should hold boolean value", l_iter.is_bool)
+			assert ("Boolean value should be false", not l_iter.bson_iter_bool)
+
+				-- Test boolean type conversion from other types
+			create l_bson.make
+			l_bson.bson_append_integer_32 ("i", 1)
+			create l_iter.make
+			l_iter.bson_iter_init (l_bson)
+			assert ("Should have first element", l_iter.bson_iter_next)
+			assert ("Integer 1 should convert to true", l_iter.bson_iter_as_bool)
+
+			create l_bson.make
+			l_bson.bson_append_integer_32 ("i", 0)
+			create l_iter.make
+			l_iter.bson_iter_init (l_bson)
+			assert ("Should have first element", l_iter.bson_iter_next)
+			assert ("Integer 0 should convert to false", not l_iter.bson_iter_as_bool)
+		end
+
 end
 
