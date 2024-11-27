@@ -467,7 +467,7 @@ feature -- Test routines
 
 				-- Create the expected BSON document from JSON
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"a%" : { %"$numberDecimal%" : %"1E-6176%" } }")
+					"{ %"a%" : { %"$numberDecimal%" : %"1E-6176%" } }")
 
 				-- Verify the documents are equal
 			assert ("Documents should be equal", l_bson.bson_equal (l_expected))
@@ -632,9 +632,9 @@ feature -- Test routines
 
 				-- Test larger int64 value
 			create l_bson.make
-			l_bson.bson_append_integer_64 ("int64_large", 9223372036854775807)  -- Max INT64
-			create l_expected.make_from_json ({STRING_8} 
-				"{ %"int64_large%" : { %"$numberLong%" : %"9223372036854775807%" } }")
+			l_bson.bson_append_integer_64 ("int64_large", 9223372036854775807) -- Max INT64
+			create l_expected.make_from_json ({STRING_8}
+					"{ %"int64_large%" : { %"$numberLong%" : %"9223372036854775807%" } }")
 			assert ("Large Int64 documents should be equal", l_bson.bson_equal (l_expected))
 
 				-- Test double
@@ -668,7 +668,7 @@ feature -- Test routines
 			l_array.bson_append_integer_32 ("5", 6)
 			l_bson.bson_append_array ("array[int]", l_array)
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"array[int]%" : [1, 2, 3, 4, 5, 6] }")
+					"{ %"array[int]%" : [1, 2, 3, 4, 5, 6] }")
 			assert ("Integer array documents should be equal", l_bson.bson_equal (l_expected))
 
 				-- Test array of doubles
@@ -678,7 +678,7 @@ feature -- Test routines
 			l_array.bson_append_double ("1", 2.123)
 			l_bson.bson_append_array ("array[double]", l_array)
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"array[double]%" : [1.123, 2.123] }")
+					"{ %"array[double]%" : [1.123, 2.123] }")
 			assert ("Double array documents should be equal", l_bson.bson_equal (l_expected))
 		end
 
@@ -695,7 +695,7 @@ feature -- Test routines
 			l_subdoc.bson_append_integer_32 ("int", 1)
 			l_bson.bson_append_document ("document", l_subdoc)
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"document%" : { %"int%" : 1 } }")
+					"{ %"document%" : { %"int%" : 1 } }")
 			assert ("Embedded document should be equal", l_bson.bson_equal (l_expected))
 
 				-- Test null
@@ -708,7 +708,7 @@ feature -- Test routines
 			create l_bson.make
 			l_bson.bson_append_regex ("regex", "1234", "i")
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"regex%" : { %"$regex%" : %"1234%", %"$options%" : %"i%" } }")
+					"{ %"regex%" : { %"$regex%" : %"1234%", %"$options%" : %"i%" } }")
 			assert ("Regex document should be equal", l_bson.bson_equal (l_expected))
 		end
 
@@ -726,8 +726,52 @@ feature -- Test routines
 			l_array.bson_append_integer_32 ("2", 1986)
 			l_bson.bson_append_array ("BSON", l_array)
 			create l_expected.make_from_json ({STRING_8}
-				"{ %"BSON%" : [%"awesome%", 5.05, 1986] }")
+					"{ %"BSON%" : [%"awesome%", 5.05, 1986] }")
 			assert ("Mixed array document should be equal", l_bson.bson_equal (l_expected))
+		end
+
+	test_bson_append_deep
+			-- Test deeply nested BSON documents
+		local
+			l_bson: BSON
+			l_tmp: BSON
+			l_expected: BSON
+			i: INTEGER
+			l_json: STRING_8
+		do
+				-- Create initial document
+			create l_bson.make
+
+				-- Create 10 levels of nested documents
+			from
+				i := 1
+			until
+				i > 10
+			loop
+					-- Store current document
+				l_tmp := l_bson
+
+					-- Create new outer document
+				create l_bson.make
+
+					-- Append previous document
+				l_bson.bson_append_document ("a", l_tmp)
+
+				i := i + 1
+			end
+
+
+				-- Create the expected BSON document from JSON
+				-- Note: This is a deeply nested document with exactly 10 levels
+			create l_expected.make_from_json ({STRING_8}
+					"{ %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { %"a%" : { } } } } } } } } } } }")
+
+				-- Verify the documents are equal
+			assert ("Documents should be equal", l_bson.bson_equal (l_expected))
+
+				-- Additional verification through JSON representation
+			assert ("JSON representation should match",
+				l_bson.bson_as_json.same_string (l_expected.bson_as_json))
 		end
 
 end
