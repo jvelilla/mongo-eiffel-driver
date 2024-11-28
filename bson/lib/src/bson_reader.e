@@ -88,7 +88,7 @@ feature -- Measurement
 
 	structure_size: INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return sizeof(bson_reader_t);"
 		end
@@ -97,37 +97,37 @@ feature {NONE} -- C externals
 
 	c_bson_reader_new_from_file (a_filename: POINTER; a_error: POINTER): POINTER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_reader_new_from_file ((const char *)$a_filename, (bson_error_t *)$a_error);"
 		end
 
 	c_bson_reader_new_from_data (a_data: POINTER; a_length: INTEGER): POINTER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_reader_new_from_data ((const uint8_t *)$a_data, (size_t)$a_length);"
 		end
 
 	c_bson_reader_read (a_reader: POINTER; a_reached_eof: POINTER): POINTER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_reader_read ((bson_reader_t *)$a_reader, (bool *)$a_reached_eof);"
 		end
 
 	c_bson_reader_tell (a_reader: POINTER): INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return (EIF_INTEGER) bson_reader_tell ((bson_reader_t *)$a_reader);"
 		end
 
 	c_bson_reader_destroy (a_reader: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"bson_reader_destroy ((bson_reader_t *)$a_reader);"
 		end
 
-end 
+end

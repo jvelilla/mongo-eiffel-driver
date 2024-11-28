@@ -101,6 +101,61 @@ feature -- Type Checks
             Result := c_bson_iter_holds_bool (item)
         end
 
+    is_binary: BOOLEAN
+        do
+            Result := c_bson_iter_holds_binary (item)
+        end
+
+    is_oid: BOOLEAN
+        do
+            Result := c_bson_iter_holds_oid (item)
+        end
+
+    is_date_time: BOOLEAN
+        do
+            Result := c_bson_iter_holds_date_time (item)
+        end
+
+    is_null: BOOLEAN
+        do
+            Result := c_bson_iter_holds_null (item)
+        end
+
+    is_regex: BOOLEAN
+        do
+            Result := c_bson_iter_holds_regex (item)
+        end
+
+    is_code: BOOLEAN
+        do
+            Result := c_bson_iter_holds_code (item)
+        end
+
+    is_codewscope: BOOLEAN
+        do
+            Result := c_bson_iter_holds_codewscope (item)
+        end
+
+    is_timestamp: BOOLEAN
+        do
+            Result := c_bson_iter_holds_timestamp (item)
+        end
+
+    is_decimal128: BOOLEAN
+        do
+            Result := c_bson_iter_holds_decimal128 (item)
+        end
+
+    is_maxkey: BOOLEAN
+        do
+            Result := c_bson_iter_holds_maxkey (item)
+        end
+
+    is_minkey: BOOLEAN
+        do
+            Result := c_bson_iter_holds_minkey (item)
+        end
+
 feature -- Access
 
     bson_iter_type: INTEGER
@@ -131,26 +186,6 @@ feature -- Access
         do
             create Result.make
             l_res := c_bson_iter_recurse (item, Result.item)
-        end
-
-    bson_iter_array: TUPLE [array_data: MANAGED_POINTER; length: NATURAL_32]
-            -- Retrieve the raw buffer of a sub-array from current iterator
-            -- Returns a tuple containing the array data and its length
-        require
-            is_array: is_array
-        local
-            l_length: NATURAL_32
-            l_data: POINTER
-            l_managed_pointer: MANAGED_POINTER
-        do
-            c_bson_iter_array (item, $l_length, $l_data)
-                -- Create a managed pointer to handle the array data
-            create l_managed_pointer.share_from_pointer (l_data, l_length.to_integer_32)
-            Result := [l_managed_pointer, l_length]
-        ensure
-            result_not_void: Result /= Void
-            valid_length: Result.length >= 0
-            valid_data: Result.array_data /= Void
         end
 
     bson_iter_as_double: REAL_64
@@ -249,6 +284,99 @@ feature -- Access
             Result := c_bson_iter_bool (item)
         ensure
             valid_value: Result = c_bson_iter_bool (item)
+        end
+
+    bson_iter_init_find (a_bson: BSON; a_key: STRING): BOOLEAN
+            -- Initialize iterator and find key in one step
+        local
+            c_key: C_STRING
+        do
+            create c_key.make (a_key)
+            Result := c_bson_iter_init_find (item, a_bson.item, c_key.item)
+        end
+
+    bson_iter_find_case (a_key: STRING): BOOLEAN
+            -- Case-insensitive key lookup
+        local
+            c_key: C_STRING
+        do
+            create c_key.make (a_key)
+            Result := c_bson_iter_find_case (item, c_key.item)
+        end
+
+    bson_iter_find_descendant (a_dotkey: STRING; a_descendant: BSON_ITERATOR): BOOLEAN
+            -- Find a descendant using dotted notation
+        local
+            c_dotkey: C_STRING
+        do
+            create c_dotkey.make (a_dotkey)
+            Result := c_bson_iter_find_descendant (item, c_dotkey.item, a_descendant.item)
+        end
+
+    bson_iter_key_len: INTEGER
+            -- Get the length of current key
+        do
+            Result := c_bson_iter_key_len (item)
+        end
+
+    bson_iter_offset: INTEGER
+            -- Get current offset in underlying BSON buffer
+        do
+            Result := c_bson_iter_offset (item)
+        end
+
+    bson_iter_oid: BSON_OID
+            -- Get ObjectId value
+        require
+            is_oid: is_oid
+        do
+            create Result.make_by_pointer (c_bson_iter_oid (item))
+        end
+
+    bson_iter_timestamp (timestamp: INTEGER_64; increment: INTEGER_64)
+            -- Get timestamp value
+        require
+            is_timestamp: is_timestamp
+        do
+            c_bson_iter_timestamp (item, $timestamp, $increment)
+        end
+
+    bson_iter_date_time: INTEGER_64
+            -- Get datetime value
+        require
+            is_date_time: is_date_time
+        do
+            Result := c_bson_iter_date_time (item)
+        end
+
+feature -- Modification
+
+    bson_iter_overwrite_bool (a_value: BOOLEAN)
+        require
+            is_bool: is_bool
+        do
+            c_bson_iter_overwrite_bool (item, a_value)
+        end
+
+    bson_iter_overwrite_int32 (a_value: INTEGER_32)
+        require
+            is_int32: is_int32
+        do
+            c_bson_iter_overwrite_int32 (item, a_value)
+        end
+
+    bson_iter_overwrite_int64 (a_value: INTEGER_64)
+        require
+            is_int64: is_int64
+        do
+            c_bson_iter_overwrite_int64 (item, a_value)
+        end
+
+    bson_iter_overwrite_double (a_value: REAL_64)
+        require
+            is_double: is_double
+        do
+            c_bson_iter_overwrite_double (item, a_value)
         end
 
 feature {NONE} -- C externals
@@ -409,12 +537,151 @@ feature {NONE} -- C externals
 			"return bson_iter_bool ((const bson_iter_t *)$a_iter);"
 		end
 
+	c_bson_iter_holds_binary (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_BINARY ((const bson_iter_t *)$a_iter);"
+		end
+
+
+	c_bson_iter_holds_oid (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_OID ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_date_time (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_DATE_TIME ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_null (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_NULL ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_regex (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_REGEX ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_code (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_CODE ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_codewscope (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_CODEWSCOPE ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_timestamp (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_TIMESTAMP ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_decimal128 (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_DECIMAL128 ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_maxkey (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_MAXKEY ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_holds_minkey (a_iter: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return BSON_ITER_HOLDS_MINKEY ((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_init_find (a_iter: POINTER; a_bson: POINTER; a_key: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_init_find((bson_iter_t *)$a_iter, (const bson_t *)$a_bson, (const char *)$a_key);"
+		end
+
+	c_bson_iter_find_case (a_iter: POINTER; a_key: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_find_case((bson_iter_t *)$a_iter, (const char *)$a_key);"
+		end
+
+	c_bson_iter_find_descendant (a_iter: POINTER; a_dotkey: POINTER; a_descendant: POINTER): BOOLEAN
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_find_descendant((bson_iter_t *)$a_iter, (const char *)$a_dotkey, (const bson_iter_t *)$a_descendant);"
+		end
+
+	c_bson_iter_key_len (a_iter: POINTER): INTEGER
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_key_len((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_offset (a_iter: POINTER): INTEGER
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_offset((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_oid (a_iter: POINTER): POINTER
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_oid((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_timestamp (a_iter: POINTER; a_timestamp: TYPED_POINTER [INTEGER_64]; a_increment: TYPED_POINTER [INTEGER_64])
+		external "C inline use <bson/bson.h>"
+		alias
+			"bson_iter_timestamp((bson_iter_t *)$a_iter, $a_timestamp, $a_increment);"
+		end
+
+	c_bson_iter_date_time (a_iter: POINTER): INTEGER_64
+		external "C inline use <bson/bson.h>"
+		alias
+			"return bson_iter_date_time((const bson_iter_t *)$a_iter);"
+		end
+
+	c_bson_iter_overwrite_bool (a_iter: POINTER; a_value: BOOLEAN)
+		external "C inline use <bson/bson.h>"
+		alias
+			"bson_iter_overwrite_bool ((bson_iter_t *)$a_iter, (bool)$a_value);"
+		end
+
+	c_bson_iter_overwrite_int32 (a_iter: POINTER; a_value: INTEGER_32)
+		external "C inline use <bson/bson.h>"
+		alias
+			"bson_iter_overwrite_int32 ((bson_iter_t *)$a_iter, (int32_t)$a_value);"
+		end
+
+	c_bson_iter_overwrite_int64 (a_iter: POINTER; a_value: INTEGER_64)
+		external "C inline use <bson/bson.h>"
+		alias
+			"bson_iter_overwrite_int64 ((bson_iter_t *)$a_iter, (int64_t)$a_value);"
+		end
+
+	c_bson_iter_overwrite_double (a_iter: POINTER; a_value: REAL_64)
+		external "C inline use <bson/bson.h>"
+		alias
+			"bson_iter_overwrite_double ((bson_iter_t *)$a_iter, (double)$a_value);"
+		end
+
 feature {NONE} -- Implementation
 
 	structure_size: INTEGER
 			-- Size to allocate (in bytes)
 		do
-				Result := struct_size
+			Result := struct_size
 		end
 
 	struct_size: INTEGER

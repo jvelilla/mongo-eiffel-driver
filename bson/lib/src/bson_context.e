@@ -19,7 +19,7 @@ inherit
 		end
 
 create
-	make, make_by_pointer
+	make, make_by_pointer, make_with_flags
 
 feature {NONE} -- Initialization
 
@@ -31,6 +31,26 @@ feature {NONE} -- Initialization
 			l_pointer := c_bson_context_get_default
 			make_by_pointer (l_pointer)
 		end
+
+
+    make_with_flags (a_flags: INTEGER)
+            -- Create a new bson_context_t with the specified flags.
+        local
+            l_pointer: POINTER
+        do
+            l_pointer := c_bson_context_new (a_flags)
+            make_by_pointer (l_pointer)
+        ensure
+            item_set: item /= default_pointer
+        end
+
+feature -- Constants
+
+    BSON_CONTEXT_NONE: INTEGER = 0
+            -- Default context behavior
+
+    BSON_CONTEXT_DISABLE_PID_CACHE: INTEGER = 4
+            -- Disable PID caching (1 << 2)
 
 feature -- Removal
 
@@ -48,7 +68,7 @@ feature {NONE} -- Implementation
 
 	c_bson_context_get_default: POINTER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_context_get_default();"
 		end
@@ -61,17 +81,25 @@ feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"sizeof(bson_context_t *)"
 		end
 
 	c_bson_context_destroy (a_context: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"bson_context_destroy ((bson_context_t *)$a_context);	"
 		end
+
+
+    c_bson_context_new (a_flags: INTEGER): POINTER
+        external
+            "C inline use <bson/bson.h>"
+        alias
+            "return bson_context_new ((bson_context_flags_t)$a_flags);"
+        end
 
 end
 

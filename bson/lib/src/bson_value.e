@@ -92,49 +92,49 @@ feature {NONE} -- Externals
 
 	c_value_type (a_pointer: POINTER): INTEGER
 		require p_not_null: a_pointer /= default_pointer
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t  *) $a_pointer)->value_type;"
 		end
 
 	c_value_int32 (a_pointer: POINTER): INTEGER_32
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_int32;"
 		end
 
 	c_value_int64 (a_pointer: POINTER): INTEGER_64
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_int64;"
 		end
 
 	c_value_double (a_pointer: POINTER): REAL_64
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_double;"
 		end
 
 	c_value_bool (a_pointer: POINTER): BOOLEAN
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_bool;"
 		end
 
 	c_value_utf8_str (a_pointer: POINTER): POINTER
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_utf8.str;"
 		end
 
 	c_value_utf8_len (a_pointer: POINTER): INTEGER
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_value_t *)$a_pointer)->value.v_utf8.len;"
 		end
 
 	c_bson_value_copy (a_src: POINTER; a_dst: POINTER)
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"bson_value_copy ((const bson_value_t *)$a_src, (bson_value_t *)$a_dst);"
 		end
@@ -158,14 +158,14 @@ feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"sizeof(bson_decimal128_t)"
 		end
 
 	c_bson_value_destroy (a_value: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"bson_value_destroy ((bson_value_t *)$a_value);"
 		end

@@ -252,12 +252,16 @@ feature -- Operations
 			l_res := c_bson_append_decimal128 (item, c_key.item, c_key.count, a_dec.item)
 		end
 
-	bson_get_data: STRING_32
+	bson_get_data: MANAGED_POINTER
+			-- Retrieve the raw buffer of the BSON document.
+			-- This can be used in conjunction with the `len` property.
+			-- Note: The returned buffer should not be modified.
 		note
 			EIS: "name=bson_get_data", "src=https://mongoc.org/libbson/current/bson_get_data.html", "protocol=uri"
 		do
-			-- TODO
-			Result := ""
+			create Result.share_from_pointer (c_bson_get_data (item), len)
+		ensure
+			valid_size: Result.count = len
 		end
 
 	bson_append_date_time (a_key: STRING_32; a_value: INTEGER_64)
@@ -302,7 +306,6 @@ feature -- Operations
 
 		end
 
-
     bson_append_timeval (a_key: STRING_32; a_seconds: INTEGER_64; a_microseconds: INTEGER)
             -- Append a time value with microsecond precision using the specified key `a_key`.
             -- `a_seconds`: Number of seconds since Unix epoch
@@ -323,6 +326,21 @@ feature -- Operations
         ensure
             length_increased: old len <= len
         end
+
+
+	bson_append_value (a_key: STRING_32; a_value: BSON_VALUE)
+			-- Append a BSON value to the current BSON document with the specified key.
+		require
+			a_key_not_void: a_key /= Void
+			a_value_not_void: a_value /= Void
+		local
+			l_key: C_STRING
+			l_res: BOOLEAN
+		do
+			create l_key.make (a_key)
+			l_res:= c_bson_append_value (item, l_key.item, l_key.count, a_value.item)
+		end
+
 
 feature -- Append Document
 
@@ -915,6 +933,12 @@ feature {NONE} -- C externals
         alias
             "return bson_validate_with_error ((const bson_t *)$a_bson, (bson_validate_flags_t)$a_flags, (bson_error_t *)$a_error);"
         end
+
+	c_bson_append_value (a_bson: POINTER; a_key: POINTER; a_key_length: INTEGER; a_value: POINTER): BOOLEAN
+		external "C inline use <bson.h>"
+		alias
+			"return bson_append_value ((bson_t *)$a_bson, (const char *)$a_key, (int)$a_key_length, (bson_value_t *)$a_value);"
+		end
 
 invariant
     max_size_positive: True -- current bson size is > 0

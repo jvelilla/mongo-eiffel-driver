@@ -90,35 +90,35 @@ feature {NONE} -- Implementation
 
 	c_high (a_pointer: POINTER): INTEGER_64
 		require p_not_null: a_pointer /= default_pointer
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_decimal128_t *) $a_pointer)->high;"
 		end
 
 	c_low (a_pointer: POINTER): INTEGER_64
 		require p_not_null: a_pointer /= default_pointer
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"return ((bson_decimal128_t *) $a_pointer)->low;"
 		end
 
 	c_set_high (a_pointer: POINTER; a_val: INTEGER_64)
 		require p_not_null: a_pointer /= default_pointer
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"((bson_decimal128_t *) $a_pointer)->high = $a_val;"
 		end
 
 	c_set_low (a_pointer: POINTER; a_val: INTEGER_64)
 		require p_not_null: a_pointer /= default_pointer
-		external "C inline use <bson.h>"
+		external "C inline use <bson/bson.h>"
 		alias
 			"((bson_decimal128_t *) $a_pointer)->low = $a_val;"
 		end
 
 	c_bson_decimal128_to_string (a_dec: POINTER; a_str: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"[
 				bson_decimal128_to_string ((const bson_decimal128_t *)$a_dec, (char *)$a_str);
@@ -128,14 +128,14 @@ feature {NONE} -- Implementation
 
 	c_bson_decimal128_from_string (a_string: POINTER; a_dec: POINTER): BOOLEAN
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_decimal128_from_string ((const char *)$a_string, (bson_decimal128_t *)$a_dec);"
 		end
 
 	c_bson_decimal128_from_string_w_len (a_string: POINTER; a_length: INTEGER; a_dec: POINTER): BOOLEAN
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"return bson_decimal128_from_string_w_len ((const char *)$a_string, $a_length, (bson_decimal128_t *)$a_dec);"
 		end
@@ -148,7 +148,7 @@ feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"sizeof(bson_decimal128_t)"
 		end

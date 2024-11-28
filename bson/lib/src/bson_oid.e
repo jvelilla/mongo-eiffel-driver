@@ -86,21 +86,21 @@ feature {NONE} -- Implementation
 
 	c_bson_oid_init (a_oid: POINTER; a_context: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"bson_oid_init ((bson_oid_t *)$a_oid, (bson_context_t *)$a_context);"
 		end
 
 	c_bson_oid_init_from_string (a_oid: POINTER; a_str: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"bson_oid_init_from_string ((bson_oid_t *)$a_oid, (const char *)$a_str);"
 		end
 
 	c_bson_oid_to_string (a_oid: POINTER; a_str: POINTER)
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"[
 				bson_oid_to_string ($a_oid, $a_str);
@@ -118,7 +118,7 @@ feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external
-			"C inline use <bson.h>"
+			"C inline use <bson/bson.h>"
 		alias
 			"sizeof(bson_oid_t)"
 		end

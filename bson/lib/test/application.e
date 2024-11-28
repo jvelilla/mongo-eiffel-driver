@@ -176,7 +176,7 @@ feature {NONE} -- Initialization
 			l_bson: BSON
 		do
 			create l_bson.make
-			l_bson.bson_append_binary ("test", {BSON_TYPES}.BSON_SUBTYPE_BINARY, {ARRAY [NATURAL_8]}<<0, 1, 2, 3, 4>>)
+			l_bson.bson_append_binary ("test", {BSON_SUBTYPE}.BSON_SUBTYPE_BINARY, {ARRAY [NATURAL_8]}<<0, 1, 2, 3, 4>>)
 			print (l_bson.bson_as_json)
 		end
 
