@@ -256,14 +256,14 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_collection_t *);"
 		end
 
 	c_mongoc_collection_destroy (a_collection: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_collection_destroy ((mongoc_collection_t *)$a_collection);"
 		end

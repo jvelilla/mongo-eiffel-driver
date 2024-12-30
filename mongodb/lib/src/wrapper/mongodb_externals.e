@@ -3,7 +3,7 @@ note
 	date: "$Date$"
 	revision: "$Revision$"
 	EIS: "name=Mongodb API", "src=http://mongoc.org/libmongoc/current/api.html", "protocol=uri"
-	
+
 
 class
 	MONGODB_EXTERNALS
@@ -365,6 +365,34 @@ feature -- Client
 						return mongoc_client_start_session ((mongoc_client_t *)$a_client, (mongoc_session_opt_t *)$a_opts, (bson_error_t *)$a_error);
 
 			]"
+		end
+
+	c_mongoc_client_get_write_concern (a_client: POINTER): POINTER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_client_get_write_concern ((const mongoc_client_t *)$a_client);"
+		end
+
+	c_mongoc_client_set_write_concern (a_client: POINTER; a_write_concern: POINTER)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_client_set_write_concern ((mongoc_client_t *)$a_client, (const mongoc_write_concern_t *)$a_write_concern);"
+		end
+
+	c_mongoc_client_get_max_message_size (a_client: POINTER): INTEGER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_client_get_max_message_size ((const mongoc_client_t *)$a_client);"
+		end
+
+	c_mongoc_client_select_server (a_client: POINTER; a_for_writes: BOOLEAN; a_prefs: POINTER; a_error: POINTER): POINTER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_client_select_server ((mongoc_client_t *)$a_client, (bool)$a_for_writes, (const mongoc_read_prefs_t *)$a_prefs, (bson_error_t *)$a_error);"
 		end
 
 feature -- Mongo Collection
@@ -850,6 +878,106 @@ feature -- MongoDB Session Options
 			"[
 				return 	mongoc_session_opts_clone ((const mongoc_session_opt_t *)$a_opts);
 			]"
+		end
+
+feature -- Write Concern
+
+	c_mongoc_write_concern_new: POINTER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_new();"
+		end
+
+	c_mongoc_write_concern_is_default (a_concern: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_is_default((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_is_acknowledged (a_concern: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_is_acknowledged((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_is_valid (a_concern: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_is_valid((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_get_w (a_concern: POINTER): INTEGER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_get_w((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_get_wtimeout_int64 (a_concern: POINTER): INTEGER_64
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_get_wtimeout_int64((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_get_wtag (a_concern: POINTER): POINTER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return (EIF_POINTER)mongoc_write_concern_get_wtag((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_get_journal (a_concern: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_get_journal((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_get_wmajority (a_concern: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_write_concern_get_wmajority((const mongoc_write_concern_t *)$a_concern);"
+		end
+
+	c_mongoc_write_concern_set_w (a_concern: POINTER; a_w: INTEGER)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_write_concern_set_w((mongoc_write_concern_t *)$a_concern, $a_w);"
+		end
+
+	c_mongoc_write_concern_set_wtimeout_int64 (a_concern: POINTER; a_wtimeout: INTEGER_64)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_write_concern_set_wtimeout_int64((mongoc_write_concern_t *)$a_concern, $a_wtimeout);"
+		end
+
+	c_mongoc_write_concern_set_wmajority (a_concern: POINTER; a_wtimeout_msec: INTEGER_64)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_write_concern_set_wmajority((mongoc_write_concern_t *)$a_concern, $a_wtimeout_msec);"
+		end
+
+	c_mongoc_write_concern_set_wtag (a_concern: POINTER; a_tag: POINTER)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_write_concern_set_wtag((mongoc_write_concern_t *)$a_concern, (const char *)$a_tag);"
+		end
+
+	c_mongoc_write_concern_set_journal (a_concern: POINTER; a_journal: BOOLEAN)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_write_concern_set_journal((mongoc_write_concern_t *)$a_concern, $a_journal);"
 		end
 
 end

@@ -91,14 +91,14 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use<mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_uri_t *);"
 		end
 
 	c_mongoc_uri_destroy (a_uri: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use<mongoc/mongoc.h>"
 		alias
 			"mongoc_uri_destroy ((mongoc_uri_t *)$a_uri);"
 		end

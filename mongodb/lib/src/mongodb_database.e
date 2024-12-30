@@ -144,21 +144,21 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_database_t *);"
 		end
 
 	c_sizeof (ptr: POINTER): INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof ($ptr)"
 		end
 
 	c_mongoc_database_destroy (a_database: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_database_destroy ((mongoc_database_t *)$a_database);	"
 		end

@@ -28,7 +28,7 @@ feature {NONE} -- Initialization
 			create l_client.make ("mongodb://localhost:27017/?appname=find-example")
 			l_collection := l_client.collection ("mydb", "mycoll")
 			create l_query.make
-			l_query.bson_append_utf8 ("hello", "eiffel")
+			l_query.bson_append_utf8 ("hello", "new eiffel")
 			l_cursor := l_collection.find_with_opts (l_query, Void, Void)
 
 			from

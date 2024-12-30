@@ -23,12 +23,14 @@ feature {NONE} -- Initialization
 		do
 				-- Create client
 			create l_client.make ("mongodb://127.0.0.1:27017")
+			l_client.set_appname ("connect-example")
+    
 
 				-- Create BSON documents for ping
 			create l_ping.make
 			l_ping.bson_append_integer_32 ("ping", 1)
 			create l_reply.make
-		
+
 				-- Verify connection with ping
 			l_client.command_simple ("admin", l_ping, Void, l_reply)
 

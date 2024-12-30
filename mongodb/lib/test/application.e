@@ -18,8 +18,8 @@ feature {NONE} -- Initialization
 	make
 			-- Run application.
 		do
---			example_client
-			tutorial
+			example_client
+--			tutorial
 		end
 
 	tutorial

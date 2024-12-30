@@ -80,7 +80,7 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_cursor_t *);"
 		end
@@ -88,7 +88,7 @@ feature {NONE} -- Measurement
 
 	c_mongoc_cursor_destroy (a_cursor: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_cursor_destroy ((mongoc_cursor_t *)$a_cursor);;"
 		end

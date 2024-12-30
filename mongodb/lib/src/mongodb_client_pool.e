@@ -116,14 +116,14 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_client_pool_t *);"
 		end
 
 	c_mongoc_client_pool_destroy (a_pool: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_client_pool_destroy ((mongoc_client_pool_t *)$a_pool);"
 		end

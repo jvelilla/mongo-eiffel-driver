@@ -70,7 +70,7 @@ feature -- Error
 			was_error: has_error
 		do
 			if attached {BSON_ERROR} error as l_error then
-				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message + "]"
+				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message.out + "]"
 			else
 				Result := "Unknown Error"
 			end
@@ -202,6 +202,18 @@ feature -- Access
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_prefs (item))
 		end
 
+    write_concern: MONGODB_WRITE_CONCERN
+            -- Get the write concern for this client
+        do
+            create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_write_concern (item))
+        end
+
+    set_write_concern (a_write_concern: MONGODB_WRITE_CONCERN)
+            -- Set the write concern for this client
+        do
+            {MONGODB_EXTERNALS}.c_mongoc_client_set_write_concern (item, a_write_concern.item)
+        end
+
 	server_descriptions: LIST [MONGODB_SERVER_DESCRIPTION]
 			-- Return an array of server descriptions or empty until the clients connects.
 		local
@@ -301,6 +313,19 @@ feature -- Change Element
 
 feature -- Command
 
+
+    ping (a_db:STRING_8): BOOLEAN
+            -- Test if server is responsive
+        local
+            l_command: BSON
+            l_reply: BSON
+        do
+            create l_command.make_from_json ("{ping: 1}")
+            create l_reply.make
+            command_simple (a_db, l_command, Void, l_reply)
+            Result := not has_error
+        end
+
 	command_simple (a_db:STRING_8; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON)
 			-- This is a simplified interface to mongoc_client_command(). It returns the first document from the result cursor into reply. The client’s read preference, read concern, and write concern are not applied to the command.
 			-- 'a_db': The name of the database to run the command on.
@@ -312,7 +337,6 @@ feature -- Command
 		local
 			c_db: C_STRING
 			l_res: BOOLEAN
-			l_reply: POINTER
 			l_read_prefs:  POINTER
 			l_error: BSON
 		do
@@ -392,21 +416,21 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_client_t *);"
 		end
 
 	c_sizeof (ptr: POINTER): INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof ($ptr)"
 		end
 
 	c_mongoc_client_destroy (a_client: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_client_destroy ((mongoc_client_t *)$a_client);"
 		end

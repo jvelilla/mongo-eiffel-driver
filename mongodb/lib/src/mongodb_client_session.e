@@ -37,14 +37,14 @@ feature {NONE} -- Measurement
 
 	struct_size: INTEGER
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_client_session_t *);"
 		end
 
 	c_mongoc_client_session_destroy (a_session: POINTER)
 		external
-			"C inline use <mongoc.h>"
+			"C inline use <mongoc/mongoc.h>"
 		alias
 			"mongoc_client_session_destroy ((mongoc_client_session_t *)$a_session);	"
 		end
