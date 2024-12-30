@@ -301,20 +301,20 @@ feature -- Change Element
 
 feature -- Command
 
-	command_simple (a_db:STRING_8; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON; a_error: detachable BSON_ERROR)
+	command_simple (a_db:STRING_8; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON)
 			-- This is a simplified interface to mongoc_client_command(). It returns the first document from the result cursor into reply. The client’s read preference, read concern, and write concern are not applied to the command.
 			-- 'a_db': The name of the database to run the command on.
 			-- 'a_command': A bson_t containing the command specification.
 			-- 'a_read_prefs': An optional mongoc_read_prefs_t. Otherwise, the command uses mode MONGOC_READ_PRIMARY.
 			-- 'reply': A location for the resulting document.
-			--	a_error: An optional location for a bson_error_t or NULL
 		note
 			EIS: "name=mongoc_client_command_simple", "src=http://mongoc.org/libmongoc/current/mongoc_client_command_simple.html", "protocol=uri"
 		local
 			c_db: C_STRING
 			l_res: BOOLEAN
-			l_error: POINTER
+			l_reply: POINTER
 			l_read_prefs:  POINTER
+			l_error: BSON
 		do
 			create c_db.make (a_db)
 
@@ -322,14 +322,13 @@ feature -- Command
 				l_read_prefs := a_read_prefs.item
 			end
 
-			if attached a_error then
-				l_error := a_error.item
-			end
-			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_simple (item, c_db.item, a_command.item, l_read_prefs, a_reply.item, l_error)
+			create l_error.make
+
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_simple (item, c_db.item, a_command.item, l_read_prefs, a_reply.item, l_error.item)
 			if l_res then
-				create error.make_by_pointer (l_error)
+				-- do nothing
 			else
-				error := Void
+				create error.make_by_pointer (l_error.item)
 			end
 		end
 
