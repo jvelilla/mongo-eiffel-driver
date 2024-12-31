@@ -214,12 +214,40 @@ feature -- Command
 			last_execution := {MONGODB_EXTERNALS}.c_mongoc_collection_delete_one (item, a_selector.item, l_opts, l_reply, l_error)
 		end
 
+feature -- Aggregation
+
+	aggregate (a_pipeline: BSON; a_opts: detachable BSON; a_read_pref: detachable MONGODB_READ_PREFERENCE ): MONGODB_CURSOR
+			-- Execute an aggregation framework pipeline using `a_pipeline`.
+			-- Returns a cursor to the result set.
+		local
+			l_opts: POINTER
+			l_flags: INTEGER
+			l_read_prefs: POINTER
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_read_pref then
+				l_read_prefs := a_read_pref.item
+			end
+			l_flags := (create {MONGODB_QUERY_FLAG}).mongoc_query_none
+			create Result.make (
+				{MONGODB_EXTERNALS}.c_mongoc_collection_aggregate (
+					item,
+					l_flags,
+					a_pipeline.item,
+					l_opts,
+					l_read_prefs
+				)
+			)
+		end
+
 feature -- Status Report
 
 	has_error: BOOLEAN
 			-- Indicates that there was an error during the last operation
 		do
-			Result := last_execution
+				Result := last_execution
 		end
 
 feature -- Drop

@@ -492,6 +492,22 @@ feature -- Mongo Collection
 			]"
 		end
 
+
+
+	c_mongoc_collection_aggregate (a_collection: POINTER; a_flags: INTEGER; a_pipeline: POINTER; a_opts: POINTER; a_read_prefs: POINTER): POINTER
+			-- Execute an aggregation pipeline
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_collection_aggregate ((mongoc_collection_t *)$a_collection,
+												  (mongoc_query_flags_t)$a_flags,
+												  (const bson_t *)$a_pipeline,
+												  (const bson_t *)$a_opts,
+												  (const mongoc_read_prefs_t *)$a_read_prefs);
+			]"
+		end
+
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER
@@ -979,5 +995,6 @@ feature -- Write Concern
 		alias
 			"mongoc_write_concern_set_journal((mongoc_write_concern_t *)$a_concern, $a_journal);"
 		end
+
 
 end
