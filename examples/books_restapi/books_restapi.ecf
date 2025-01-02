@@ -9,13 +9,21 @@
 		<option warning="true">
 			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
 		</option>
+		
+		<!-- Add Windows socket definitions before other includes -->
+		<external_cflag value="-D_WINSOCK_DEFINED -DWIN32_LEAN_AND_MEAN -DWIN32 -D_WINSOCK_DEPRECATED_NO_WARNINGS">
+			<condition>
+				<platform value="windows"/>
+			</condition>
+		</external_cflag>
+
 		<capability>
 			<concurrency use="scoop"/>
 		</capability>
 		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
 		<library name="http" location="$ISE_LIBRARY\contrib\library\network\protocol\http\http.ecf"/>
-		<library name="mongodb" location="..\..\mongodb\lib\mongodb.ecf"/>
 		<library name="bson" location="..\..\bson\lib\bson.ecf"/>
+		<library name="mongodb" location="..\..\mongodb\lib\mongodb.ecf"/>
 		<library name="wsf" location="$ISE_LIBRARY\contrib\library\web\framework\ewf\wsf\wsf.ecf"/>
 		<library name="wsf_extension" location="$ISE_LIBRARY\contrib\library\web\framework\ewf\wsf\wsf_extension.ecf" readonly="false"/>
 		<library name="json" location="$ISE_LIBRARY\contrib\library\text\parser\json\library\json.ecf" readonly="false"/>

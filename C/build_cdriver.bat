@@ -1,4 +1,3 @@
-
 @echo off
 REM This script Configures, Cleans, and Builds libbson and libmongoc using CMake
 
@@ -20,7 +19,11 @@ cmake -S . -B _build ^
    -D CMAKE_BUILD_TYPE=RelWithDebInfo ^
    -D BUILD_VERSION="1.29.0" ^
    -D ENABLE_MONGOC=ON ^
-
+   -D ENABLE_SSL=OFF ^
+   -D ENABLE_SASL=OFF ^
+   -D ENABLE_ICU=OFF ^
+   -D ENABLE_SNAPPY=OFF
+   
 REM Build the project
 cmake --build _build --config RelWithDebInfo --parallel
 

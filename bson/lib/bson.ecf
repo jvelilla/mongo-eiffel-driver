@@ -38,5 +38,16 @@
 		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
 		<library name="time" location="$ISE_LIBRARY\library\time\time.ecf"/>
 		<cluster name="src" location=".\src\" recursive="true"/>
+
+		<external_cflag value="-DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0600 -DWINVER=0x0600 -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS">
+			<condition>
+				<platform value="windows"/>
+			</condition>
+		</external_cflag>
+		<external_cflag value="-DWIN32_LEAN_AND_MEAN">
+			<condition>
+				<platform value="windows"/>
+			</condition>
+		</external_cflag>
 	</target>
 </system>

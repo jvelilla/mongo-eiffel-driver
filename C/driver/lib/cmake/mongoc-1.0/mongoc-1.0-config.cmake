@@ -2,8 +2,8 @@ include(CMakeFindDependencyMacro)
 find_dependency(bson-1.0 1.29.0)
 
 # If we need to import a TLS package for our imported targets, do that now:
-set(MONGOC_TLS_BACKEND [[SecureChannel]])
-set(_tls_package [[NO]])
+set(MONGOC_TLS_BACKEND [[OFF]])
+set(_tls_package [[]])
 if(_tls_package)
   # We bring our own FindLibreSSL, since most systems do not have one yet. The system's version
   # will be preferred, if possible.
@@ -34,7 +34,7 @@ if(NOT _mongoc_built_with_bundled_utf8proc AND NOT TARGET PkgConfig::PC_UTF8PROC
 endif()
 
 # Find dependencies for SASL
-set(_sasl_backend [[SSPI]])
+set(_sasl_backend [[OFF]])
 if(_sasl_backend STREQUAL "Cyrus")
   # We need libsasl2. The find-module should be installed within this package.
   # temporarily place it on the module search path:
