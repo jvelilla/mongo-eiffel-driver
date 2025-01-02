@@ -62,14 +62,13 @@ feature -- Access
 			create Result.make (l_pointer)
 		end
 
-	count (a_flags: INTEGER; a_query: BSON; a_skip: INTEGER_64; a_limit: INTEGER_64; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_error: detachable BSON_ERROR): INTEGER_64
+	count (a_flags: INTEGER; a_query: BSON; a_skip: INTEGER_64; a_limit: INTEGER_64; a_read_prefs: detachable MONGODB_READ_PREFERENCE; ): INTEGER_64
 			-- This feature shall execute a count query `a_query' on the current collection.
 			-- 'a_flags': A mongoc_query_flags_t.
 			-- 'a_query': A bson_t containing the query.
 			-- 'a_skip': A int64_t, zero to ignore.
 			-- 'a_limit': A int64_t, zero to ignore.
 			-- 'a_read_prefs': An optional mongoc_read_prefs_t.
-			-- 'a_error': An optional location for a bson_error_t.
 		note
 			EIS: "name=mongoc_collection_count", "src=http://mongoc.org/libmongoc/current/mongoc_collection_count.html", "protocol=uri"
 		require
@@ -81,31 +80,28 @@ feature -- Access
 			if attached a_read_prefs then
 				l_read_prefs := a_read_prefs.item
 			end
-			if attached a_error then
-				l_error := a_error.item
-			end
 			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_count (item, a_flags, a_query.item, a_skip, a_limit, l_read_prefs, l_error)
-			if Result = -1 then
-				last_execution := False
+			if Result >= 0 then
+				-- do nothing
 			else
-				last_execution := True
+				create error.make_by_pointer (l_error)
 			end
 		end
 
 feature -- Command
 
-	insert_one (a_document: BSON; a_opts: detachable BSON; a_reply: detachable BSON; a_error: detachable BSON_ERROR)
+	insert_one (a_document: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
 			-- This feature shall insert document `a_document' into collection.
 			-- a_document: A BSON document
 			-- a_opts: An optional BSON containing additional options.
 			-- a_reply: Optional. An uninitialized bson_t populated with the insert result.
-			-- a_error: An optional location for a BSON_ERROR.
 		note
 			EIS: "name=mongoc_collection_insert_one", "src=http://mongoc.org/libmongoc/current/mongoc_collection_insert_one.html", "protocol=uri"
 		local
 			l_opts: POINTER
 			l_reply: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
+			l_res: BOOLEAN
 		do
 			if attached a_opts then
 				l_opts := a_opts.item
@@ -113,37 +109,37 @@ feature -- Command
 			if attached a_reply then
 				l_reply := a_reply.item
 			end
-			if attached a_error then
-				l_error := a_error.item
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_insert_one (item, a_document.item, l_opts, l_reply, l_error.item)
+			if l_res then
+				-- do nothing
+			else
+				create error.make_by_pointer (l_error.item)
 			end
-			last_execution := {MONGODB_EXTERNALS}.c_mongoc_collection_insert_one (item, a_document.item, l_opts, l_reply, l_error)
 		end
 
-	insert_many (a_documents: LIST [BSON]; a_opts: detachable BSON; a_reply: detachable BSON; a_error: detachable BSON_ERROR)
+	insert_many (a_documents: LIST [BSON]; a_opts: detachable BSON; a_reply: detachable BSON)
 			--documents: An array of pointers to bson_t.
 			--opts may be NULL or a BSON document with additional command options:
 			--reply: Optional. An uninitialized bson_t populated with the insert result, or NULL.
-			--error: An optional location for a bson_error_t or NULL.		
 		note
 			EIS: "name=mongoc_collection_insert_one", "src=http://mongoc.org/libmongoc/current/mongoc_collection_insert_many.html", "protocol=uri"
 		local
 			l_opts: POINTER
 			l_reply: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
 			l_pos: INTEGER
 			l_array: SPECIAL [MANAGED_POINTER]
 			l_item: MANAGED_POINTER
 			l_pointers: MANAGED_POINTER
 			l_bson: BSON
+			l_res: BOOLEAN
 		do
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
 			if attached a_reply then
 				l_reply := a_reply.item
-			end
-			if attached a_error then
-				l_error := a_error.item
 			end
 
 			create l_item.make (a_documents.count*8)
@@ -158,22 +154,27 @@ feature -- Command
 				l_pos := l_pos + 8
 			end
 
-			last_execution := {MONGODB_EXTERNALS}.c_mongoc_collection_insert_many (item, l_item.item, a_documents.count , l_opts, l_reply, l_error)
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_insert_many (item, l_item.item, a_documents.count , l_opts, l_reply, l_error.item)
+			if l_res then
+				-- do nothing
+			else
+				create error.make_by_pointer (l_error.item)
+			end
 		end
 
-	update_one (a_selector: BSON; a_update: BSON; a_opts: detachable BSON; a_reply: detachable BSON; a_error: detachable BSON_ERROR)
+	update_one (a_selector: BSON; a_update: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
 			-- a_selector: A bson_t containing the query to match the document for updating.
 			-- a_update: A bson_t containing the update to perform.
 			-- a_opts: An optional bson_t containing additional options
 			-- a_reply: Optional. An uninitialized bson_t populated with the update result.
-			-- a_error: An optional location for a bson_error_t.
 			-- This feature updates at most one document in collection that matches selector `a_selector'.
 		note
 			EIS: "name=mongoc_collection_update_one","src=http://mongoc.org/libmongoc/current/mongoc_collection_update_one.html", "protocol=uri"
 		local
 			l_opts: POINTER
 			l_reply: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
 			if attached a_opts then
@@ -182,24 +183,26 @@ feature -- Command
 			if attached a_reply then
 				l_reply := a_reply.item
 			end
-			if attached a_error then
-				l_error := a_error.item
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_update_one (item, a_selector.item, a_update.item, l_opts, l_reply, l_error.item)
+			if l_res then
+				-- do nothing
+			else
+				create error.make_by_pointer (l_error.item)
 			end
-			last_execution := {MONGODB_EXTERNALS}.c_mongoc_collection_update_one (item, a_selector.item, a_update.item, l_opts, l_reply, l_error)
 		end
 
-	delete_one (a_selector: BSON; a_opts: detachable BSON; a_reply: detachable BSON; a_error: detachable BSON_ERROR )
+	delete_one (a_selector: BSON; a_opts: detachable BSON; a_reply: detachable BSON )
 			-- a_selector: A bson_t containing the query to match documents.
 			-- a_opts: An optional bson_t containing additional options.
 			-- a_reply: Optional. An uninitialized bson_t populated with the delete result, or NULL.
-			-- a_error: An optional location for a bson_error_t or NULL.
 			-- This feature removes at most one document in the given collection that matches selector `a_selector'.		
 		note
 			EIS: "name=mongoc_collection_delete_one","src=http://mongoc.org/libmongoc/current/mongoc_collection_delete_one.html","protocol=uri"
 		local
 			l_opts: POINTER
 			l_reply: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
 			if attached a_opts then
@@ -208,10 +211,13 @@ feature -- Command
 			if attached a_reply then
 				l_reply := a_reply.item
 			end
-			if attached a_error then
-				l_error := a_error.item
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_delete_one (item, a_selector.item, l_opts, l_reply, l_error.item)
+			if l_res then
+				-- do nothing
+			else
+				create error.make_by_pointer (l_error.item)
 			end
-			last_execution := {MONGODB_EXTERNALS}.c_mongoc_collection_delete_one (item, a_selector.item, l_opts, l_reply, l_error)
 		end
 
 feature -- Aggregation
@@ -247,8 +253,23 @@ feature -- Status Report
 	has_error: BOOLEAN
 			-- Indicates that there was an error during the last operation
 		do
-				Result := last_execution
+			Result := attached error
 		end
+
+	error_string: STRING
+			-- Output a related error message.
+		require
+			was_error: has_error
+		do
+			if attached {BSON_ERROR} error as l_error then
+				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message.out + "]"
+			else
+				Result := "Unknown Error"
+			end
+		end
+
+	error: detachable BSON_ERROR
+			-- last error.	
 
 feature -- Drop
 
@@ -268,11 +289,6 @@ feature -- Drop
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_drop_with_opts (item, l_opts, l_error.item)
 		end
-
-feature {NONE} -- Implementation
-
-	last_execution: BOOLEAN
-			-- True if successful or false in other case, check the BSON_ERROR for details. 		
 
 feature {NONE} -- Measurement
 
