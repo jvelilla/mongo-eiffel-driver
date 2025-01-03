@@ -77,7 +77,7 @@ feature -- Access
 				l_after
 			loop
 				if attached l_cursor.next as l_bson then
-					Result.extend (l_bson.bson_as_canonical_extended_json)
+					Result.extend (l_bson.bson_as_canonical_extended_json_value)
 				else
 					l_after := True
 				end
@@ -116,7 +116,7 @@ feature -- Access
 				l_after
 			loop
 				if attached l_cursor.next as l_bson then
-					Result := l_bson.bson_as_canonical_extended_json
+					Result := l_bson.bson_as_canonical_extended_json_value
 				else
 					l_after := True
 				end
