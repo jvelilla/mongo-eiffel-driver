@@ -88,6 +88,51 @@ feature -- Access
 			end
 		end
 
+	find_and_modify (query: BSON; sort: detachable BSON; update: BSON; fields: detachable BSON;
+					 remove: BOOLEAN; upsert: BOOLEAN; new_doc: BOOLEAN; reply: BSON)
+			-- Update and return an object.
+			-- `query`: A bson_t containing the query to locate target document(s)
+			-- `sort`: A bson_t containing the sort order for `query`
+			-- `update`: A bson_t containing an update spec
+			-- `fields`: An optional bson_t containing the fields to return or Void
+			-- `remove`: If the matching documents should be removed
+			-- `upsert`: If an upsert should be performed
+			-- `new_doc`: If the new version of the document should be returned
+			-- `reply`: A bson_t to contain the results
+		note
+			EIS: "name=mongoc_collection_find_and_modify", "src=http://mongoc.org/libmongoc/current/mongoc_collection_find_and_modify.html", "protocol=uri"
+		local
+			l_sort: POINTER
+			l_fields: POINTER
+			l_error: BSON_ERROR
+			l_res: BOOLEAN
+		do
+			if attached sort then
+				l_sort := sort.item
+			end
+			if attached fields then
+				l_fields := fields.item
+			end
+
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_find_and_modify (
+				item,            -- collection
+				query.item,      -- query
+				l_sort,          -- sort
+				update.item,     -- update
+				l_fields,        -- fields
+				remove,          -- remove
+				upsert,          -- upsert
+				new_doc,         -- new
+				reply.item,      -- reply
+				l_error.item     -- error
+			)
+
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
 feature -- Command
 
 	insert_one (a_document: BSON; a_opts: detachable BSON; a_reply: detachable BSON)

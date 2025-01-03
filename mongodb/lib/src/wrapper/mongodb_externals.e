@@ -508,6 +508,27 @@ feature -- Mongo Collection
 			]"
 		end
 
+	c_mongoc_collection_find_and_modify (coll: POINTER; query: POINTER; sort: POINTER;
+			update: POINTER; fields: POINTER; remove: BOOLEAN; upsert: BOOLEAN;
+			new_doc: BOOLEAN; reply: POINTER; error: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_collection_find_and_modify(
+					(mongoc_collection_t*)$coll,
+					(const bson_t*)$query,
+					(const bson_t*)$sort,
+					(const bson_t*)$update,
+					(const bson_t*)$fields,
+					$remove,
+					$upsert,
+					$new_doc,
+					(bson_t*)$reply,
+					(bson_error_t*)$error
+				);
+			]"
+		end
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER
@@ -995,6 +1016,7 @@ feature -- Write Concern
 		alias
 			"mongoc_write_concern_set_journal((mongoc_write_concern_t *)$a_concern, $a_journal);"
 		end
+
 
 
 end
