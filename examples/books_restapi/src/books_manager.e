@@ -97,13 +97,13 @@ feature -- Access
 			l_collection: MONGODB_COLLECTION
 			l_doc: BSON
 			l_oid: BSON_OID
-			l_error: BSON_ERROR
 		do
 			reset
 			create l_doc.make_from_json (a_book.to_json_string)
-			create l_error.make
-			mongodb_collection.insert_one (l_doc, Void, Void, l_error)
-			post_execution (l_error)
+			mongodb_collection.insert_one (l_doc, Void, Void)
+			if attached mongodb_collection.error as l_error then
+				post_execution (l_error)
+			end
 		end
 
 	find_doument_by_id (a_id: STRING): detachable STRING
@@ -133,14 +133,14 @@ feature -- Access
 			--Delete an item by id `a_id', if any. from the collection `books'
 		local
 			l_doc: BSON
-			l_error: BSON_ERROR
 		do
 			reset
 			create l_doc.make
 			l_doc.bson_append_utf8 ("_id", a_id)
-			create l_error.make
-			mongodb_collection.delete_one (l_doc, Void, Void, l_error)
-			post_execution (l_error)
+			mongodb_collection.delete_one (l_doc, Void, Void)
+			if attached mongodb_collection.error as l_error then
+				post_execution (l_error)
+			end
 		end
 
 	update_document (a_book: BOOK)
@@ -149,7 +149,6 @@ feature -- Access
 			l_query: BSON
 			l_update: BSON
 			l_subdoc: BSON
-			l_error: BSON_ERROR
 		do
 			create l_query.make
 			l_query.bson_append_utf8 ("_id", a_book.id.oid_to_string)
@@ -157,9 +156,11 @@ feature -- Access
 			create l_update.make
 			l_update.bson_append_document ("$set", l_subdoc)
 
-			create l_error.make
-			mongodb_collection.update_one (l_query, l_update, Void, Void, l_error)
-			post_execution (l_error)
+			mongodb_collection.update_one (l_query, l_update, Void, Void)
+			if attached mongodb_collection.error as l_error then
+				post_execution (l_error)
+			end
+
 		end
 
 
