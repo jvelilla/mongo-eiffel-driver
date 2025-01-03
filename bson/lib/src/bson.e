@@ -527,7 +527,7 @@ feature -- Status Report
 
 feature -- BSON to JSON string
 
-	bson_as_json_string: STRING
+	bson_as_json: STRING
 		obsolete "[
 			Deprecated since version 1.29.0: Use bson_as_canonical_extended_json() and bson_as_relaxed_extended_json() instead,
 			which use the same MongoDB Extended JSON format as all other MongoDB drivers. [2024-11-25]
@@ -539,7 +539,7 @@ feature -- BSON to JSON string
 			Result := l_res.string
 		end
 
-	bson_as_canonical_extended_json_string: STRING
+	bson_as_canonical_extended_json: STRING
 		note
 			EIS: "name=bson_as_canonical_extended_json", "src=https://mongoc.org/libbson/current/bson_as_canonical_extended_json.html", "protocol=url"
 		local
@@ -549,7 +549,7 @@ feature -- BSON to JSON string
 			Result := l_res.string
 		end
 
-	bson_as_relaxed_extended_json_string: STRING
+	bson_as_relaxed_extended_json: STRING
 		note
 			EIS: "name=bson_as_relaxed_extended_json", "src=https://mongoc.org/libbson/current/bson_as_relaxed_extended_json.html", "protocol=url"
 		local
@@ -559,7 +559,7 @@ feature -- BSON to JSON string
 			Result := l_res.string
 		end
 
-	bson_array_as_json_string: STRING
+	bson_array_as_json: STRING
 		local
 			l_res: C_STRING
 		do
@@ -569,32 +569,32 @@ feature -- BSON to JSON string
 
 feature -- BSON to JSON value		
 
-	bson_as_json: JSON_VALUE
+	bson_as_json_value: JSON_VALUE
 		obsolete "[
 			Deprecated since version 1.29.0: Use bson_as_canonical_extended_json() and bson_as_relaxed_extended_json() instead,
 			which use the same MongoDB Extended JSON format as all other MongoDB drivers. [2024-11-25]
 			]"
 		do
-			Result := to_json_value (bson_as_json_string)
+			Result := to_json_value (bson_as_json)
 		end
 
-	bson_as_canonical_extended_json: JSON_VALUE
+	bson_as_canonical_extended_json_value: JSON_VALUE
 		note
 			EIS: "name=bson_as_canonical_extended_json", "src=https://mongoc.org/libbson/current/bson_as_canonical_extended_json.html", "protocol=url"
 		do
-			Result := to_json_value (bson_as_canonical_extended_json_string)
+			Result := to_json_value (bson_as_canonical_extended_json)
 		end
 
-	bson_as_relaxed_extended_json: JSON_VALUE
+	bson_as_relaxed_extended_json_value: JSON_VALUE
 		note
 			EIS: "name=bson_as_relaxed_extended_json", "src=https://mongoc.org/libbson/current/bson_as_relaxed_extended_json.html", "protocol=url"
 		do
-			Result := to_json_value (bson_as_relaxed_extended_json_string)
+			Result := to_json_value (bson_as_relaxed_extended_json)
 		end
 
-	bson_array_as_json: JSON_VALUE
+	bson_array_as_json_value: JSON_VALUE
 		do
-			Result := to_json_value (bson_array_as_json_string)
+			Result := to_json_value (bson_array_as_json)
 		end
 
 feature -- Removal
