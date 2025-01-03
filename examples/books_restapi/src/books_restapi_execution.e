@@ -54,18 +54,55 @@ feature {NONE} -- Initialization
  feature  -- Handle HTML pages
 
  	handle_home_page (req: WSF_REQUEST; res: WSF_RESPONSE)
+ 		local
+			l_books_mgr: BOOKS_MANAGER
+			b: BOOK
+			html: STRING_8
+			p: WSF_HTML_PAGE_RESPONSE
  		do
- 			handle_not_implemented ("Home page not implemented", req, res)
+ 			create l_books_mgr.make (mongodb_client)
+ 			create html.make_empty
+ 			if
+ 				attached l_books_mgr.find_documents as docs and then
+ 				docs.is_empty
+ 			then
+ 				create b.make ("Eiffel MongoDB", "Tutorial: how to use MongoDB with Eiffel", "https://www.eiffel.org/theme/responsive-eiffel-org/images/logo.png")
+ 				l_books_mgr.insert_document (b)
+	 			html.append ("Initialization: added one new book")
+ 			end
+			html.append ("<ul>")
+			html.append ("<li><a href=%"/books%">List of books</a></li>")
+			html.append ("</ul>")
+
+ 			create p.make
+ 			p.set_body (html)
+ 			p.set_title ("Eiffel MongoDB Books example")
+ 			res.send (p)
  		end
 
 	handle_collection (req: WSF_REQUEST; res: WSF_RESPONSE)
 		local
 			l_books_mgr: BOOKS_MANAGER
+			jobj: JSON_OBJECT
+			jlinks: JSON_OBJECT
 		do
 			if attached req.http_host as l_host then
 				if req.is_get_request_method then
 					create l_books_mgr.make (mongodb_client)
-					compute_response_get_json (req, res, l_books_mgr.find_documents )
+					create jobj.make_with_capacity (2)
+					if attached l_books_mgr.find_documents as docs then
+						jobj.put (l_books_mgr.find_documents, "items")
+						create jlinks.make_with_capacity (docs.count)
+						across
+							docs as ic
+						loop
+							if attached {JSON_STRING} (ic.item / "_id") as j_book_id then
+								jlinks.put (create {JSON_STRING}.make_from_string_general (req.absolute_script_url ("/books/"+ j_book_id.unescaped_string_8)), "book#" + j_book_id.unescaped_string_8)
+							end
+						end
+						jobj.put (jlinks, "links")
+					end
+					compute_response_get_json (req, res, jobj.representation)
 				elseif req.is_post_request_method  then
 					if attached {BOOK} extract_data_from_json (req) as l_book then
 							-- TODO handle errors.
@@ -80,7 +117,7 @@ feature {NONE} -- Initialization
 						handle_bad_request_response ("{%"error%":%"Error with form data: JSON form with the following pattern:%N { %"name%":%"...%", %"description%":%"...%",  %"image%":%"...%" }%"", req, res)
 					end
 				else
-					handle_method_not_allowed_response ("{%"error%":%"The mehtod [" + req.request_method + "] is not allowed%"}" , req, res)
+					handle_method_not_allowed_response ("{%"error%":%"The method [" + req.request_method + "] is not allowed%"}" , req, res)
 				end
  			else
  				handle_internal_server_error ("{%"error%":%"Internal Server Error: host not found%"}", req, res)
@@ -96,8 +133,8 @@ feature {NONE} -- Initialization
 				if req.is_get_request_method then
 					if attached {WSF_STRING}  req.path_parameter ("id") as l_id then
 						create l_books_mgr.make (mongodb_client)
-						if attached l_books_mgr.find_doument_by_id (l_id.value) as l_result then
-							compute_response_get_json (req, res, l_result)
+						if attached l_books_mgr.find_document_by_id (l_id.value) as l_result then
+							compute_response_get_json (req, res, l_result.representation)
 						else
 							handle_resource_not_found_response ("{%"error%":%"The document id [" + l_id.value +"] does not exist%"}", req, res)
 						end
@@ -106,7 +143,7 @@ feature {NONE} -- Initialization
 				elseif req.is_delete_request_method then
 					if attached {WSF_STRING}  req.path_parameter ("id") as l_id then
 						create l_books_mgr.make (mongodb_client)
-						if  attached l_books_mgr.find_doument_by_id (l_id.value)  then
+						if  attached l_books_mgr.find_document_by_id (l_id.value)  then
 							l_books_mgr.delete_by_id (l_id.value)
 							if l_books_mgr.has_error then
 								handle_internal_server_error ("{%"error%":%"Database Server Error:[" + l_books_mgr.error_message +"] %"}", req, res)
@@ -122,7 +159,7 @@ feature {NONE} -- Initialization
 				elseif req.is_put_request_method then
 					if attached {WSF_STRING}  req.path_parameter ("id") as l_id then
 						create l_books_mgr.make (mongodb_client)
-						if attached l_books_mgr.find_doument_by_id (l_id.value) then
+						if attached l_books_mgr.find_document_by_id (l_id.value) then
 							if 	attached {BOOK} extract_data_from_json (req) as l_book then
 								l_book.set_id (l_id.value)
 								l_books_mgr.update_document (l_book)

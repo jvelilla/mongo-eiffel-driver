@@ -61,7 +61,7 @@ feature -- Status Error
 
 feature -- Access
 
-	find_documents: STRING
+	find_documents: JSON_ARRAY
 			-- return a json array with all the files in the collection `books`.
 		local
 			l_query: BSON
@@ -73,21 +73,15 @@ feature -- Access
 
 			from
 				create Result.make_empty
-				Result.append ("[")
-				Result.append ("%N")
 			until
 				l_after
 			loop
 				if attached l_cursor.next as l_bson then
-
-					Result.append (l_bson.bson_as_canonical_extended_json)
-					Result.append (",")
+					Result.extend (l_bson.bson_as_canonical_extended_json)
 				else
 					l_after := True
 				end
 			end
-			Result.remove_tail (1)
-			Result.append ("]")
 		end
 
 	insert_document (a_book: BOOK)
@@ -106,7 +100,7 @@ feature -- Access
 			end
 		end
 
-	find_doument_by_id (a_id: STRING): detachable STRING
+	find_document_by_id (a_id: STRING): detachable JSON_VALUE
 			-- Return a json document by id `a_id', if any. from the collection `books'
 		local
 			l_query: BSON
@@ -177,6 +171,20 @@ feature {NONE} -- Implementation
 		do
 			if mongodb_collection.has_error then
 				create error.make_by_pointer (a_error.item)
+			end
+		end
+
+	to_json_value (s: STRING): JSON_VALUE
+		local
+			p: JSON_PARSER
+		do
+			create p.make
+			p.parse_string (s)
+			if p.is_valid then
+				Result := p.parsed_json_value
+			end
+			if Result = Void then
+				create {JSON_NULL} Result
 			end
 		end
 end
