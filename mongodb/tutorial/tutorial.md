@@ -6,6 +6,7 @@ This tutorial will show you how to use MongoDB with Eiffel, using our MongoDB an
 
 1. MongoDB 
 2. The MongoDB C Driver installed on your system
+   2.1 Cmake is required to build the driver from source.
 3. The Eiffel MongoDB and BSON wrappers
 4. EiffelStudio
 
@@ -13,7 +14,7 @@ This tutorial will show you how to use MongoDB with Eiffel, using our MongoDB an
 
 ## Installing the MongoDB C Driver
 
-http://mongoc.org/libmongoc/current/installing.html
+ https://www.mongodb.com/docs/languages/c/c-driver/current/get-started/download-and-install/
 
 # Installing MongoDB
 
@@ -26,6 +27,9 @@ On Windows, we provide a pre-built MongoDB C driver for you. The driver is locat
 Be sure to add the bin folder to your PATH environment variable.
 
 We also provide an script in case you need to build the driver from source. `build_driver.bat`
+First, download the source code from the MongoDB C Driver website: https://github.com/mongodb/mongo-c-driver
+copy the `build_driver.bat` script to the root of the MongoDB C Driver source code and run it.
+Copy the generated resources to the `C\driver` folder of the MongoDB Eiffel wrapper.
 	
 ## Setting Up MongoDB with Docker Compose
 
