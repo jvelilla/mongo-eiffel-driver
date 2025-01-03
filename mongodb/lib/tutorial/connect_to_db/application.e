@@ -24,7 +24,7 @@ feature {NONE} -- Initialization
 				-- Create client
 			create l_client.make ("mongodb://127.0.0.1:27017")
 			l_client.set_appname ("connect-example")
-    
+
 
 				-- Create BSON documents for ping
 			create l_ping.make
@@ -37,7 +37,7 @@ feature {NONE} -- Initialization
 			if l_client.has_error then
 				print ("Error: " + l_client.error_string + " %N")
 			else
-				print ("Pinged your deployment. You successfully connected to MongoDB!%N")
+				print ("Pinged your deployment. You successfully connected to MongoDB!%N" + l_reply.bson_as_canonical_extended_json)
 
 					-- Database operations
 				l_database := l_client.database ("newDB")

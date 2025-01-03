@@ -43,8 +43,7 @@ feature {NONE} -- Initialization
 			l_doc.bson_append_utf8 ("hello2", "array2")
 			l_array.force (l_doc)
 
-			create l_error.make
-			l_collection.insert_many (l_array, Void, Void, l_error)
+			l_collection.insert_many (l_array, Void, Void)
 		end
 
 

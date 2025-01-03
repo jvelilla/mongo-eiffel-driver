@@ -40,7 +40,7 @@ feature {NONE} -- Initialization
                     "loc": [-73.9967, 40.7484]
                 }
             ]")
-            collection.insert_one (doc, Void, Void, Void)
+            collection.insert_one (doc, Void, Void)
 
             create doc.make_from_json ("[
                 {
@@ -51,7 +51,7 @@ feature {NONE} -- Initialization
                     "loc": [-118.2437, 34.0522]
                 }
             ]")
-            collection.insert_one (doc, Void, Void, Void)
+            collection.insert_one (doc, Void, Void)
 
             create doc.make_from_json ("[
                 {
@@ -62,7 +62,7 @@ feature {NONE} -- Initialization
                     "loc": [-87.6298, 41.8781]
                 }
             ]")
-            collection.insert_one (doc, Void, Void, Void)
+            collection.insert_one (doc, Void, Void)
 
 
 
