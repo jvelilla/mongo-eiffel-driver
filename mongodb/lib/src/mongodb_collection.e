@@ -129,10 +129,7 @@ feature -- Command
 			l_reply: POINTER
 			l_error: BSON_ERROR
 			l_pos: INTEGER
-			l_array: SPECIAL [MANAGED_POINTER]
 			l_item: MANAGED_POINTER
-			l_pointers: MANAGED_POINTER
-			l_bson: BSON
 			l_res: BOOLEAN
 		do
 			if attached a_opts then

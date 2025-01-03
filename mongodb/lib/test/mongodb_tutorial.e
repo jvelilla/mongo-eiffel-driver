@@ -24,7 +24,7 @@ feature -- Tutorial
 			across l_servers as ic  loop
 				print ("%Ndescription_id: " + ic.item.description_id.out)
 				print ("%Ndescription_type: " + ic.item.description_type)
-				print ("%Nis_master: " + ic.item.is_master.bson_as_json)
+				print ("%Nis_master: " + ic.item.is_master.bson_as_relaxed_extended_json)
 				print ("%Nround_trip_time: " + ic.item.round_trip_time.out)
 			end
 
@@ -63,7 +63,7 @@ feature -- Tutorial
 
 			l_read_preference := l_client.read_preferences
 			print ("%NMode Value: " + l_read_preference.mode.value.out)
-			print ("%NTags:" + l_read_preference.tags.bson_as_json)
+			print ("%NTags:" + l_read_preference.tags.bson_as_relaxed_extended_json)
 		end
 
 
@@ -98,7 +98,7 @@ feature -- Tutorial
 				l_end
 			loop
 				if attached l_db_cursor.next as l_db_item then
-					print (l_db_item.bson_as_json)
+					print (l_db_item.bson_as_relaxed_extended_json)
 					io.put_new_line
 				else
 					l_end := True
@@ -141,7 +141,6 @@ feature -- Tutorial
 			l_collection: MONGODB_COLLECTION
 			l_command: BSON
 			l_reply: BSON
-			l_error: BSON_ERROR
 			l_insert: BSON
 		do
 				-- Initialize and create a new mongobd client instance.
@@ -161,21 +160,21 @@ feature -- Tutorial
 			create l_command.make
 			l_command.bson_append_integer_32 ("ping", 1)
 			create l_reply.make
-			create l_error.make
-			l_client.command_simple ("db_name", l_command, Void, l_reply, l_error)
+			l_client.command_simple ("db_name", l_command, Void, l_reply)
 
-			print ("%NOperation: l_client.command_simple " + l_error.message)
-
-			print ("%N bson output: " +l_reply.bson_as_json)
+			if l_client.has_error then
+				print ("%NOperation: l_client.command_simple " + l_collection.error_string)
+			else
+				print ("%N bson output: " +l_reply.bson_as_canonical_extended_json)
+			end
 
 			create l_insert.make
 			l_insert.bson_append_utf8 ("hello", "world")
-			create l_error.make
 
-			l_collection.insert_one (l_insert, Void, Void, l_error)
-
-			print ("%NOperation l_collection.insert_one" + l_error.message)
-
+			l_collection.insert_one (l_insert, Void, Void)
+			if l_collection.has_error then
+				print ("%NOperation l_collection.insert_one " + l_collection.error_string)
+			end
 
 		end
 
@@ -232,9 +231,9 @@ feature -- Tutorial
 			l_retval := {MONGODB_EXTERNALS}.c_mongoc_client_command_simple (l_client, l_admin.item, l_command.item, default_pointer, l_reply.item, l_error.item)
 
 			if not l_retval then
-				print ("%N Failure: " + l_error.message)
+				print ({STRING_32}"%N Failure: " + l_error.message)
 			else
-				print ("%N bson output: " +l_reply.bson_as_json)
+				print ("%N bson output: " +l_reply.bson_as_canonical_extended_json)
 			end
 
 
@@ -245,7 +244,7 @@ feature -- Tutorial
 			l_retval := {MONGODB_EXTERNALS}.c_mongoc_collection_insert_one (l_collection, l_insert.item, l_opts.item, default_pointer, l_error.item)
 
 			if not l_retval then
-				print ("%N Failure: " + l_error.message)
+				print ({STRING_32}"%N Failure: " + l_error.message)
 			end
 		end
 
@@ -260,7 +259,6 @@ feature -- Crud
 			l_collection: MONGODB_COLLECTION
 			l_doc: BSON
 			l_oid: BSON_OID
-			l_error: BSON_ERROR
 		do
 			create l_client.make ("mongodb://localhost:27017/?appname=insert-example")
 			l_collection := l_client.collection ("mydb", "mycoll")
@@ -269,9 +267,11 @@ feature -- Crud
 			l_doc.bson_append_oid ("_id", l_oid)
 			l_doc.bson_append_utf8 ("hello", "new eiffel")
 
-			create l_error.make
-			l_collection.insert_one (l_doc, Void, Void, l_error)
-			print ("Last Operation l_collection.insert_one: " + l_error.message)
+			l_collection.insert_one (l_doc, Void, Void)
+			if l_collection.has_error then
+				print ("Last Operation l_collection.insert_one: " + l_collection.error_string)
+			end
+
 		end
 
 	find_documents
@@ -344,7 +344,6 @@ feature -- Crud
 			l_update: BSON
 			l_query: BSON
 			l_oid: BSON_OID
-			l_error: BSON_ERROR
 			l_subdoc: BSON
 		do
 			create l_client.make ("mongodb://localhost:27017/?appname=update-example")
@@ -354,8 +353,7 @@ feature -- Crud
 			l_doc.bson_append_oid ("_id", l_oid)
 			l_doc.bson_append_utf8 ("key", "old_value")
 
-			create l_error.make
-			l_collection.insert_one (l_doc,Void, Void, l_error)
+			l_collection.insert_one (l_doc,Void, Void)
 
 			create l_query.make
 			l_query.bson_append_oid ("_id", l_oid)
@@ -366,11 +364,12 @@ feature -- Crud
 			create l_update.make
 			l_update.bson_append_document ("$set", l_subdoc)
 
-			create l_error.make
 
-			l_collection.update_one (l_query, l_update, Void, Void, l_error)
+			l_collection.update_one (l_query, l_update, Void, Void)
+			if l_collection.has_error then
+				print ("Last Operation : l_collection.update_one: " + l_collection.error_string)
+			end
 
-			print ("Last Operation : l_collection.update_one: " + l_error.message)
 		end
 
 
@@ -382,7 +381,6 @@ feature -- Crud
 			l_collection: MONGODB_COLLECTION
 			l_doc: BSON
 			l_oid: BSON_OID
-			l_error: BSON_ERROR
 		do
 			create l_client.make ("mongodb://localhost:27017/?appname=delete-example")
 			l_collection := l_client.collection ("test", "test")
@@ -391,16 +389,20 @@ feature -- Crud
 			l_doc.bson_append_oid ("_id", l_oid)
 			l_doc.bson_append_utf8 ("hello", "world")
 
-			create l_error.make
-			l_collection.insert_one (l_doc, Void, Void, l_error)
-			print ("Last Operation : l_collection.insert_one: " + l_error.message)
+			l_collection.insert_one (l_doc, Void, Void)
+			if l_collection.has_error then
+				print ("Last Operation : l_collection.insert_one: " + l_collection.error_string)
+			end
+
 
 
 			create l_doc.make
 			l_doc.bson_append_oid ("_id", l_oid)
-			create l_error.make
-			l_collection.delete_one (l_doc, Void, Void, l_error)
-			print ("Last Operation : l_collection.delete_one: " + l_error.message)
+			l_collection.delete_one (l_doc, Void, Void)
+			if l_collection.has_error then
+				print ("Last Operation : l_collection.delete_one: " + l_collection.error_string)
+			end
+
 
 		end
 
@@ -412,7 +414,6 @@ feature -- Crud
 			l_client: MONGODB_CLIENT
 			l_doc: BSON
 			l_collection: MONGODB_COLLECTION
-			l_error: BSON_ERROR
 			l_count: INTEGER_64
 		do
 			create l_client.make ("mongodb://localhost:27017/?appname=delete-example")
@@ -420,10 +421,9 @@ feature -- Crud
 			create l_doc.make
 			l_doc.bson_append_utf8 ("hello", "world")
 
-			create l_error.make
-			l_count := l_collection.count ((create {MONGODB_QUERY_FLAG}).mongoc_query_none, l_doc, 0, 0, Void, l_error)
+			l_count := l_collection.count ((create {MONGODB_QUERY_FLAG}).mongoc_query_none, l_doc, 0, 0, Void)
 			if l_count < 0 then
-				print ("Error message: " + l_error.message)
+				print ("Error message: " + l_collection.error_string)
 			else
 				print ("Number of documents:" + l_count.out)
 			end

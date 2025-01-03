@@ -37,8 +37,6 @@ feature -- Operations
 		end
 
 	bson_iter_next: BOOLEAN
-		local
-			l_res: BOOLEAN
 		do
 			Result := c_bson_iter_next (item)
 		end
