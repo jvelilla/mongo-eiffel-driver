@@ -671,6 +671,40 @@ feature -- Collection Operations
             ]"
         end
 
+    c_mongoc_collection_drop_index (collection: POINTER; index_name: POINTER; error: POINTER): BOOLEAN
+            -- Drop an index from the collection
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to drop the index from
+            --   index_name: const char* - name of the index to drop
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_drop_index(
+                    (mongoc_collection_t *)$collection,
+                    (const char *)$index_name,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_collection_find_indexes_with_opts (collection: POINTER; opts: POINTER): POINTER
+            -- Fetch a cursor containing documents for each index in the collection
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to get indexes from
+            --   opts: const bson_t* - optional additional options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_find_indexes_with_opts(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$opts
+                );
+            ]"
+        end
+
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER
@@ -1185,6 +1219,223 @@ feature -- MongoDB Indexes
             "C inline use <mongoc/mongoc.h>"
         alias
             "mongoc_index_model_destroy((mongoc_index_model_t *)$model);"
+        end
+
+feature -- Collection Operations
+
+    c_mongoc_bulk_operation_destroy (bulk: POINTER)
+            -- Destroy a bulk operation
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_destroy((mongoc_bulk_operation_t *)$bulk);
+            ]"
+        end
+
+    c_mongoc_bulk_operation_execute (bulk: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Execute a bulk operation
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_execute(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_insert (bulk: POINTER; document: POINTER): BOOLEAN
+            -- Queue an insert operation
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_insert(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$document
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_remove (bulk: POINTER; selector: POINTER)
+            -- Queue a remove operation in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match documents
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_remove(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_get_server_id (bulk: POINTER): NATURAL_32
+            -- Get the server id for a bulk operation
+            -- Parameters:
+            --   bulk: const mongoc_bulk_operation_t* - the bulk operation handle
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_get_server_id((const mongoc_bulk_operation_t *)$bulk);
+            ]"
+        end
+
+    c_mongoc_bulk_operation_insert_with_opts (bulk: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue an insert operation with options
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   document: const bson_t* - document to insert
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_insert_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$document,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_remove_many_with_opts (bulk: POINTER; selector: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue a remove operation with options in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match documents
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_remove_many_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_remove_one (bulk: POINTER; selector: POINTER)
+            -- Queue a remove operation for a single document in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_remove_one(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_remove_one_with_opts (bulk: POINTER; selector: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue a remove operation for a single document with options
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_remove_one_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_replace_one (bulk: POINTER; selector: POINTER; document: POINTER; upsert: BOOLEAN)
+            -- Queue a replace operation for a single document in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+            --   document: const bson_t* - the replacement document
+            --   upsert: bool - whether to insert if document not found
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_replace_one(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (bool)$upsert
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_replace_one_with_opts (bulk: POINTER; selector: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue a replace operation for a single document with options
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+            --   document: const bson_t* - the replacement document
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_replace_one_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_set_bypass_document_validation (bulk: POINTER; bypass: BOOLEAN)
+            -- Set whether to bypass document validation for this bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   bypass: bool - whether to bypass document validation
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_set_bypass_document_validation(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (bool)$bypass
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_set_client_session (bulk: POINTER; client_session: POINTER)
+            -- Set an explicit client session to use for the bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   client_session: mongoc_client_session_t* - the client session to use
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_set_client_session(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (mongoc_client_session_t *)$client_session
+                );
+            ]"
         end
 
 end

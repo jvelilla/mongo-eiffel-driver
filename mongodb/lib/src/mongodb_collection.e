@@ -489,6 +489,55 @@ feature -- Indexes
 			end
 		end
 
+	drop_index (a_index_name: READABLE_STRING_GENERAL)
+			-- Drop the index named `a_index_name` from the collection.
+			-- If the operation fails, sets the error which can be checked with `has_error`.
+		require
+			valid_index_name: not a_index_name.is_empty
+		local
+			l_error: BSON_ERROR
+			l_c_string: C_STRING
+			l_res: BOOLEAN
+		do
+			create l_c_string.make (a_index_name)
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_drop_index (
+				item,               -- collection
+				l_c_string.item,    -- index_name
+				l_error.item        -- error
+			)
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
+	find_indexes_with_opts (a_opts: detachable BSON): MONGODB_CURSOR
+			-- Fetch a cursor containing documents for each index in the collection.
+			-- Each document describes an index, with fields:
+			--   "v": index version
+			--   "key": document containing index keys and their order
+			--   "name": index name
+			--   "ns": full namespace (databaseName.collectionName)
+			-- Parameters:
+			--   a_opts: Optional additional options for the operation
+		note
+			EIS: "name=mongoc_collection_find_indexes_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_collection_find_indexes_with_opts.html", "protocol=uri"
+		local
+			l_opts: POINTER
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			create Result.make (
+				{MONGODB_EXTERNALS}.c_mongoc_collection_find_indexes_with_opts (
+					item,    -- collection
+					l_opts   -- opts
+				)
+			)
+		ensure
+			result_not_void: Result /= Void
+		end
+
 feature -- Status Report
 
 	has_error: BOOLEAN
