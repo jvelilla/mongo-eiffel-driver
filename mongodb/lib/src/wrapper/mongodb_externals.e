@@ -578,6 +578,53 @@ feature -- Collection Operations
                 );
             ]"
         end 
+
+    c_mongoc_collection_update_many (collection: POINTER; selector: POINTER; update: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Update all documents matching selector
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to update
+            --   selector: const bson_t* - the query to match documents
+            --   update: const bson_t* - the update to apply
+            --   opts: const bson_t* - optional update options
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_update_many(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$update,
+                    (const bson_t *)$opts,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_collection_command_simple (collection: POINTER; command: POINTER; read_prefs: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Execute a command on the collection.
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to execute the command on
+            --   command: const bson_t* - the command to execute
+            --   read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            --   reply: bson_t* - storage for the command's result document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_command_simple(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$command,
+                    (const mongoc_read_prefs_t *)$read_prefs,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER

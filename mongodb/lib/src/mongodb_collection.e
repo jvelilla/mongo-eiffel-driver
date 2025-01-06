@@ -38,7 +38,7 @@ feature -- Removal
 		end
 
 
-feature -- Access
+feature -- Access: Query
 
 	find_with_opts (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE): MONGODB_CURSOR
 			-- 'a_filter': A bson_t containing the query to execute.
@@ -286,6 +286,30 @@ feature -- Command
 			end
 		end
 
+
+	update_many (a_selector: BSON; a_update: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
+			-- Update all documents matching `a_selector`
+		note
+			EIS: "name=mongoc_collection_update_many", "src=http://mongoc.org/libmongoc/current/mongoc_collection_update_many.html", "protocol=uri"
+		local
+			l_opts: POINTER
+			l_reply: POINTER
+			l_error: BSON_ERROR
+			l_res: BOOLEAN
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_reply then
+				l_reply := a_reply.item
+			end
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_update_many (item, a_selector.item, a_update.item, l_opts, l_reply, l_error.item)
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
 	delete_one (a_selector: BSON; a_opts: detachable BSON; a_reply: detachable BSON )
 			-- a_selector: A bson_t containing the query to match documents.
 			-- a_opts: An optional bson_t containing additional options.
@@ -312,6 +336,39 @@ feature -- Command
 			else
 				create error.make_by_pointer (l_error.item)
 			end
+		end
+
+	command_simple (command: BSON; read_prefs: detachable MONGODB_READ_PREFERENCE; reply: BSON): BOOLEAN
+			-- Execute a command on the collection.
+			-- `command`: A BSON containing the command to execute
+			-- `read_prefs`: Optional read preferences
+			-- `reply`: A BSON to contain the results (initialized even upon failure)
+			-- Returns: True if successful, False and sets error if there are invalid arguments or a server/network error
+		note
+			EIS: "name=mongoc_collection_command_simple", "src=http://mongoc.org/libmongoc/current/mongoc_collection_command_simple.html", "protocol=uri"
+		local
+			l_error: BSON_ERROR
+			l_read_prefs: POINTER
+		do
+			create l_error.make
+			if attached read_prefs then
+				l_read_prefs := read_prefs.item
+			end
+
+			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_command_simple (
+				item,           -- collection
+				command.item,   -- command
+				l_read_prefs,   -- read_prefs
+				reply.item,     -- reply
+				l_error.item    -- error
+			)
+
+			if not Result then
+				error := l_error
+			end
+		ensure
+			error_set: not Result implies error /= Void
+			reply_initialized: reply /= Void
 		end
 
 feature -- Aggregation
