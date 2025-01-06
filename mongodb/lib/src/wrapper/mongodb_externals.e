@@ -625,6 +625,52 @@ feature -- Collection Operations
             ]"
         end
 
+    c_mongoc_collection_delete_many (collection: POINTER; selector: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Delete all documents matching selector
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to delete from
+            --   selector: const bson_t* - the query to match documents
+            --   opts: const bson_t* - optional delete options
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_delete_many(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$opts,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_collection_create_indexes_with_opts (collection: POINTER; models: POINTER; n_models: INTEGER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Create multiple indexes on the collection
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to create indexes on
+            --   models: mongoc_index_model_t** - array of index model pointers
+            --   n_models: size_t - number of index models
+            --   opts: const bson_t* - optional additional options
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_create_indexes_with_opts(
+                    (mongoc_collection_t *)$collection,
+                    (mongoc_index_model_t **)$models,
+                    (size_t)$n_models,
+                    (const bson_t *)$opts,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER
@@ -1113,6 +1159,32 @@ feature -- Write Concern
 			"mongoc_write_concern_set_journal((mongoc_write_concern_t *)$a_concern, $a_journal);"
 		end
 
+feature -- MongoDB Indexes
 
+    c_mongoc_index_model_new (keys: POINTER; opts: POINTER): POINTER
+            -- Create a new index model
+            -- Parameters:
+            --   keys: const bson_t* - document containing fields and order for the index
+            --   opts: const bson_t* - optional index options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_index_model_new(
+                    (const bson_t *)$keys,
+                    (const bson_t *)$opts
+                );
+            ]"
+        end
+
+    c_mongoc_index_model_destroy (model: POINTER)
+            -- Destroy an index model
+            -- Parameters:
+            --   model: mongoc_index_model_t* - the index model to destroy
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_index_model_destroy((mongoc_index_model_t *)$model);"
+        end
 
 end

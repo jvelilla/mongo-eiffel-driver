@@ -236,7 +236,7 @@ feature -- Command
 				l_reply := a_reply.item
 			end
 
-			create l_item.make (a_documents.count*8)
+			create l_item.make (a_documents.count * 8)
 			from
 				a_documents.start
 				l_pos := 0
@@ -338,6 +338,39 @@ feature -- Command
 			end
 		end
 
+	delete_many (a_selector: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
+			-- Delete all documents matching `a_selector`
+			-- Parameters:
+			--   a_selector: A bson_t containing the query to match documents
+			--   a_opts: An optional bson_t containing additional options
+			--   a_reply: Optional. An uninitialized bson_t populated with the delete result
+		note
+			EIS: "name=mongoc_collection_delete_many", "src=http://mongoc.org/libmongoc/current/mongoc_collection_delete_many.html", "protocol=uri"
+		local
+			l_opts: POINTER
+			l_reply: POINTER
+			l_error: BSON_ERROR
+			l_res: BOOLEAN
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_reply then
+				l_reply := a_reply.item
+			end
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_delete_many (
+				item,            	-- collection
+				a_selector.item, 	-- selector
+				l_opts,         	-- opts
+				l_reply,        	-- reply
+				l_error.item    	-- error
+			)
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
 	command_simple (command: BSON; read_prefs: detachable MONGODB_READ_PREFERENCE; reply: BSON): BOOLEAN
 			-- Execute a command on the collection.
 			-- `command`: A BSON containing the command to execute
@@ -399,6 +432,61 @@ feature -- Aggregation
 					l_read_prefs
 				)
 			)
+		end
+
+feature -- Indexes
+
+	create_indexes_with_opts (a_models: LIST [MONGODB_INDEX_MODEL]; a_opts: detachable BSON; a_reply: detachable BSON)
+			-- Create multiple indexes on the collection
+			-- Parameters:
+			--   a_models: List of index models defining the indexes to create
+			--   a_opts: Optional additional options
+			--   a_reply: Optional reply document
+		note
+			EIS: "name=mongoc_collection_create_indexes_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_collection_create_indexes_with_opts.html", "protocol=uri"
+		local
+			l_opts: POINTER
+			l_reply: POINTER
+			l_error: BSON_ERROR
+			l_res: BOOLEAN
+			l_pos: INTEGER
+			l_item: MANAGED_POINTER
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_reply then
+				l_reply := a_reply.item
+			end
+
+				-- Create a managed pointer to store array of model pointers
+			create l_item.make (a_models.count * {PLATFORM}.pointer_bytes)
+
+				-- Fill the array with model pointers
+			from
+				a_models.start
+				l_pos := 0
+			until
+				a_models.after
+			loop
+				l_item.put_pointer (a_models.item.item, l_pos)
+				a_models.forth
+				l_pos := l_pos + {PLATFORM}.pointer_bytes
+			end
+
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_create_indexes_with_opts (
+				item,                -- collection
+				l_item.item,         -- models array
+				a_models.count,      -- number of models
+				l_opts,              -- opts
+				l_reply,             -- reply
+				l_error.item         -- error
+			)
+
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
 		end
 
 feature -- Status Report
