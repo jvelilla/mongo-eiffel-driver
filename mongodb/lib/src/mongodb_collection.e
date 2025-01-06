@@ -62,31 +62,6 @@ feature -- Access
 			create Result.make (l_pointer)
 		end
 
-	count (a_flags: INTEGER; a_query: BSON; a_skip: INTEGER_64; a_limit: INTEGER_64; a_read_prefs: detachable MONGODB_READ_PREFERENCE; ): INTEGER_64
-			-- This feature shall execute a count query `a_query' on the current collection.
-			-- 'a_flags': A mongoc_query_flags_t.
-			-- 'a_query': A bson_t containing the query.
-			-- 'a_skip': A int64_t, zero to ignore.
-			-- 'a_limit': A int64_t, zero to ignore.
-			-- 'a_read_prefs': An optional mongoc_read_prefs_t.
-		note
-			EIS: "name=mongoc_collection_count", "src=http://mongoc.org/libmongoc/current/mongoc_collection_count.html", "protocol=uri"
-		require
-			is_valid_falg: (create {MONGODB_QUERY_FLAG}).is_valid_flag (a_flags)
-		local
-			l_read_prefs: POINTER
-			l_error: POINTER
-		do
-			if attached a_read_prefs then
-				l_read_prefs := a_read_prefs.item
-			end
-			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_count (item, a_flags, a_query.item, a_skip, a_limit, l_read_prefs, l_error)
-			if Result >= 0 then
-				-- do nothing
-			else
-				create error.make_by_pointer (l_error)
-			end
-		end
 
 	find_and_modify (query: BSON; sort: detachable BSON; update: BSON; fields: detachable BSON;
 					 remove: BOOLEAN; upsert: BOOLEAN; new_doc: BOOLEAN; reply: BSON)
@@ -129,6 +104,83 @@ feature -- Access
 			)
 
 			if not l_res then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
+
+	count (a_flags: INTEGER; a_query: BSON; a_skip: INTEGER_64; a_limit: INTEGER_64; a_read_prefs: detachable MONGODB_READ_PREFERENCE; ): INTEGER_64
+			-- This feature shall execute a count query `a_query' on the current collection.
+			-- 'a_flags': A mongoc_query_flags_t.
+			-- 'a_query': A bson_t containing the query.
+			-- 'a_skip': A int64_t, zero to ignore.
+			-- 'a_limit': A int64_t, zero to ignore.
+			-- 'a_read_prefs': An optional mongoc_read_prefs_t.
+		note
+			EIS: "name=mongoc_collection_count", "src=http://mongoc.org/libmongoc/current/mongoc_collection_count.html", "protocol=uri"
+		obsolete "[
+				Deprecated since version 1.11.0: Use mongoc_collection_count_documents() or mongoc_collection_estimated_document_count() instead.
+			]"
+		require
+			is_valid_falg: (create {MONGODB_QUERY_FLAG}).is_valid_flag (a_flags)
+		local
+			l_read_prefs: POINTER
+			l_error: POINTER
+		do
+			if attached a_read_prefs then
+				l_read_prefs := a_read_prefs.item
+			end
+			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_count (item, a_flags, a_query.item, a_skip, a_limit, l_read_prefs, l_error)
+			if Result >= 0 then
+				-- do nothing
+			else
+				create error.make_by_pointer (l_error)
+			end
+		end
+
+	count_documents (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON): INTEGER_64
+			-- Count documents matching `a_filter` with optional parameters `a_opts`.
+			-- This is the recommended way to count documents (over the deprecated count).
+		note
+			EIS: "name=mongoc_collection_count_documents", "src=http://mongoc.org/libmongoc/current/mongoc_collection_count_documents.html", "protocol=uri"
+		local
+			l_opts: POINTER
+			l_prefs: POINTER
+
+			l_error: BSON_ERROR
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_read_prefs then
+			    l_prefs := a_read_prefs.item
+			end
+			create l_error.make
+			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_count_documents (item, a_filter.item, l_opts, l_prefs, a_reply.item, l_error.item)
+			if Result < 0 then
+				create error.make_by_pointer (l_error.item)
+			end
+		end
+
+	estimated_document_count (a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON): INTEGER_64
+			-- Get an estimate of the count of documents in the collection.
+			-- This operation is faster than count_documents but less accurate.
+		note
+			EIS: "name=mongoc_collection_estimated_document_count", "src=http://mongoc.org/libmongoc/current/mongoc_collection_estimated_document_count.html", "protocol=uri"
+		local
+			l_opts: POINTER
+			l_prefs: POINTER
+			l_error: BSON_ERROR
+		do
+			if attached a_opts then
+				l_opts := a_opts.item
+			end
+			if attached a_read_prefs then
+				l_prefs := a_read_prefs.item
+			end
+			create l_error.make
+			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_estimated_document_count (item, l_opts, l_prefs, a_reply.item, l_error.item)
+			if Result < 0 then
 				create error.make_by_pointer (l_error.item)
 			end
 		end
@@ -267,6 +319,8 @@ feature -- Aggregation
 	aggregate (a_pipeline: BSON; a_opts: detachable BSON; a_read_pref: detachable MONGODB_READ_PREFERENCE ): MONGODB_CURSOR
 			-- Execute an aggregation framework pipeline using `a_pipeline`.
 			-- Returns a cursor to the result set.
+		note
+			EIS: "name=mongoc_collection_aggregate","src=https://mongoc.org/libmongoc/current/mongoc_collection_aggregate.html","protocol=uri"
 		local
 			l_opts: POINTER
 			l_flags: INTEGER
@@ -353,5 +407,7 @@ feature {NONE} -- Measurement
 		alias
 			"mongoc_collection_destroy ((mongoc_collection_t *)$a_collection);"
 		end
+
+
 
 end

@@ -529,6 +529,55 @@ feature -- Mongo Collection
 				);
 			]"
 		end
+
+
+feature -- Collection Operations
+
+    c_mongoc_collection_count_documents (collection: POINTER; filter: POINTER; opts: POINTER; read_prefs: POINTER; reply: POINTER; error: POINTER): INTEGER_64
+            -- Count documents in collection matching filter
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to count from
+            --   filter: const bson_t* - the filter to match documents
+            --   opts: const bson_t* - optional query options
+            --   read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_count_documents(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$filter,
+                    (const bson_t *)$opts,
+                    (const mongoc_read_prefs_t *)$read_prefs,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_collection_estimated_document_count (collection: POINTER; opts: POINTER; read_prefs: POINTER; reply: POINTER; error: POINTER): INTEGER_64
+            -- Get an estimated count of documents in collection
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to count from
+            --   opts: const bson_t* - optional query options
+            --   read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_estimated_document_count(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$opts,
+                    (const mongoc_read_prefs_t *)$read_prefs,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end 
 feature -- Mongo Database
 
 	c_mongoc_database_create_collection (a_database: POINTER; a_name: POINTER; a_opts: POINTER; a_error: POINTER): POINTER

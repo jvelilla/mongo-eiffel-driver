@@ -33,7 +33,7 @@ feature {NONE} -- Initialization
 
             if not client.has_error then
                 print ("Server pinged successfully!%N")
-                print ("Reply: " + reply.bson_as_json + "%N")
+                print ("Reply: " + reply.bson_as_canonical_extended_json_value.representation + "%N")
             else
                 print ("Error: " + client.error_string + "%N")
             end
