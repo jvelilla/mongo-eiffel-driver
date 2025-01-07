@@ -577,7 +577,7 @@ feature -- Collection Operations
                     (bson_error_t *)$error
                 );
             ]"
-        end 
+        end
 
     c_mongoc_collection_update_many (collection: POINTER; selector: POINTER; update: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
             -- Update all documents matching selector
@@ -1221,7 +1221,7 @@ feature -- MongoDB Indexes
             "mongoc_index_model_destroy((mongoc_index_model_t *)$model);"
         end
 
-feature -- Collection Operations
+feature -- Bulk Operations
 
     c_mongoc_bulk_operation_destroy (bulk: POINTER)
             -- Destroy a bulk operation
@@ -1434,6 +1434,153 @@ feature -- Collection Operations
                 mongoc_bulk_operation_set_client_session(
                     (mongoc_bulk_operation_t *)$bulk,
                     (mongoc_client_session_t *)$client_session
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_set_comment (bulk: POINTER; comment: POINTER)
+            -- Set a comment to associate with this bulk write operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   comment: const bson_value_t* - the comment value to set
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_set_comment(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_value_t *)$comment
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_set_server_id (bulk: POINTER; server_id: NATURAL_32)
+            -- Set the server id for this bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   server_id: uint32_t - the server id to use
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_set_server_id(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (uint32_t)$server_id
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_set_let (bulk: POINTER; let: POINTER)
+            -- Define constants that can be accessed by all operations in this bulk
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   let: const bson_t* - BSON document containing constant definitions
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_set_let(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$let
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_update (bulk: POINTER; selector: POINTER; document: POINTER; upsert: BOOLEAN)
+            -- Queue an update operation in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match documents
+            --   document: const bson_t* - document containing the update operations
+            --   upsert: bool - whether to insert if document not found
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_update(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (bool)$upsert
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_update_many_with_opts (bulk: POINTER; selector: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue an update operation to update multiple documents with options
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match documents
+            --   document: const bson_t* - document containing the update operations
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - error information
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_update_many_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_update_one (bulk: POINTER; selector: POINTER; document: POINTER; upsert: BOOLEAN)
+            -- Queue an update operation for a single document in a bulk operation
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+            --   document: const bson_t* - document containing the update operations
+            --   upsert: bool - whether to insert if document not found
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                mongoc_bulk_operation_update_one(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (bool)$upsert
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_update_one_with_opts (bulk: POINTER; selector: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue an update operation for a single document with options
+            -- Parameters:
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match document
+            --   document: const bson_t* - document containing the update operations
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - error information
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_update_one_with_opts(
+                    (mongoc_bulk_operation_t *)$bulk,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$document,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_bulk_operation_get_write_concern (bulk: POINTER): POINTER
+            -- Get the write concern for a bulk operation
+            -- Parameters:
+            --   bulk: const mongoc_bulk_operation_t* - the bulk operation handle
+            -- Returns: const mongoc_write_concern_t* - the write concern
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_bulk_operation_get_write_concern(
+                    (const mongoc_bulk_operation_t *)$bulk
                 );
             ]"
         end
