@@ -604,6 +604,17 @@ feature -- Change Element
 			end
 		end
 
+	set_socket_timeout_ms (a_timeout_ms: INTEGER)
+			-- Set the socket timeout for this client.
+			-- If client was obtained from a client pool, the socket timeout is restored
+			-- to the previous value when returning the client to the pool.
+			-- `a_timeout_ms': The requested timeout value in milliseconds.
+		note
+			eis: "name=mongoc_client_set_sockettimeoutms", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_sockettimeoutms.html", "protocol=uri"
+		do
+			{MONGODB_EXTERNALS}.c_mongoc_client_set_sockettimeoutms (item, a_timeout_ms)
+		end
+
 feature -- Command
 
     ping (a_db: READABLE_STRING_GENERAL): BOOLEAN
@@ -693,6 +704,54 @@ feature -- Session
 				-- TODO check if there was an error. check l_error.
 			create Result.make_by_pointer (l_ptr)
 		end
+
+
+feature -- Handshake
+
+    handshake_data_append (a_driver_name: detachable READABLE_STRING_GENERAL;
+                          a_driver_version: detachable READABLE_STRING_GENERAL;
+                          a_platform: detachable READABLE_STRING_GENERAL)
+            -- Appends the given strings to the handshake data for the underlying C Driver.
+            -- Must be called before any server operations begin and can only be called once.
+            -- `a_driver_name': Optional name of the wrapping driver
+            -- `a_driver_version': Optional version of the wrapping driver
+            -- `a_platform': Optional information about the current platform
+            -- Returns: True if the handshake data was successfully appended
+        note
+            eis: "name=mongoc_handshake_data_append", "src=http://mongoc.org/libmongoc/current/mongoc_handshake_data_append.html", "protocol=uri"
+        local
+            l_driver_name, l_driver_version, l_platform: C_STRING
+            l_driver_name_ptr, l_driver_version_ptr, l_platform_ptr: POINTER
+            l_res: BOOLEAN
+            l_error: BSON_ERROR
+        do
+            if attached a_driver_name then
+                create l_driver_name.make (a_driver_name)
+                l_driver_name_ptr := l_driver_name.item
+            end
+            if attached a_driver_version then
+                create l_driver_version.make (a_driver_version)
+                l_driver_version_ptr := l_driver_version.item
+            end
+            if attached a_platform then
+                create l_platform.make (a_platform)
+                l_platform_ptr := l_platform.item
+            end
+
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_handshake_data_append (
+                l_driver_name_ptr,     -- driver_name
+                l_driver_version_ptr,  -- driver_version
+                l_platform_ptr         -- platform
+            )
+            if not l_res then
+            	create l_error.make
+                l_error.set_error ({MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+                                   {MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_HANDSHAKE_FAILED,
+                                   "Failed to append handshake data. This operation must be called before any server operations begin and can only be called once.")
+            	create error.make_by_pointer (l_error.item)
+            end
+        end
+
 
 feature {NONE} -- Measurement
 

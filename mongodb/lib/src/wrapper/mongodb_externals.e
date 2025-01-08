@@ -482,6 +482,32 @@ feature -- Client
 			]"
 		end
 
+	c_mongoc_client_set_sockettimeoutms (a_client: POINTER; a_timeoutms: INTEGER)
+			-- Set the socket timeout for this client
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_client_set_sockettimeoutms((mongoc_client_t *)$a_client, (int32_t)$a_timeoutms);"
+		end
+
+	c_mongoc_handshake_data_append (a_driver_name: POINTER; a_driver_version: POINTER; a_platform: POINTER): BOOLEAN
+			-- Appends the given strings to the handshake data for the underlying C Driver.
+			-- Parameters:
+			--   a_driver_name: const char* - The name of the wrapping driver
+			--   a_driver_version: const char* - The version of the wrapping driver
+			--   a_platform: const char* - Information about the current platform
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_handshake_data_append(
+					(const char *)$a_driver_name,
+					(const char *)$a_driver_version,
+					(const char *)$a_platform
+				);
+			]"
+		end
+
 feature -- Mongo Collection
 
 	c_mongoc_collection_insert_one (a_collection: POINTER; a_document: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
