@@ -134,13 +134,15 @@ feature -- Collection
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_database_create_collection (item, l_name.item, l_opts, l_error.item))
 		end
 
-feature {NONE} -- Measurement
+feature -- Measurement
 
 	structure_size: INTEGER
 			-- Size to allocate (in bytes)
 		do
 			Result := struct_size
 		end
+
+feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external

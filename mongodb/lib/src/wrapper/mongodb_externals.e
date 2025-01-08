@@ -730,7 +730,7 @@ feature -- Collection Operations
         alias
             "[
                 return mongoc_collection_update_many_with_opts(
-                    (mongoc_collection_t *)$bulk,
+                    (mongoc_bulk_operation_t *)$bulk,
                     (const bson_t *)$selector,
                     (const bson_t *)$document,
                     (const bson_t *)$opts,
@@ -1841,6 +1841,296 @@ feature -- Server API
             "C inline use <mongoc/mongoc.h>"
         alias
             "mongoc_server_api_deprecation_errors((mongoc_server_api_t *)$a_api, (bool)$a_deprecation_errors);"
+        end
+
+feature -- GridFS Bucket
+
+    c_mongoc_gridfs_bucket_new (database: POINTER; opts: POINTER; error: POINTER): POINTER
+            -- Create a new GridFS bucket instance
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_gridfs_bucket_new(
+                    (mongoc_database_t *)$database,
+                    (const bson_t *)$opts,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_gridfs_bucket_upload_from_stream (bucket: POINTER; filename: POINTER; source: POINTER;
+                                             opts: POINTER; file_id: POINTER; error: POINTER): BOOLEAN
+            -- Upload contents from stream to GridFS
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_gridfs_bucket_upload_from_stream(
+                    (mongoc_gridfs_bucket_t *)$bucket,
+                    (const char *)$filename,
+                    (mongoc_stream_t *)$source,
+                    (const bson_t *)$opts,
+                    (bson_value_t *)$file_id,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+    c_mongoc_gridfs_bucket_download_to_stream (bucket: POINTER; file_id: POINTER; destination: POINTER; error: POINTER): BOOLEAN
+            -- Download a file from GridFS to the destination stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_gridfs_bucket_download_to_stream(
+                    (mongoc_gridfs_bucket_t *)$bucket,
+                    (const bson_value_t *)$file_id,
+                    (mongoc_stream_t *)$destination,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
+feature -- Stream
+
+    c_mongoc_stream_get_base_stream (stream: POINTER): POINTER
+            -- Get the underlying stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_get_base_stream((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_read (stream: POINTER; buffer: POINTER; length: INTEGER; min_bytes: INTEGER; timeout_msec: INTEGER): INTEGER
+            -- Read from stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_read((mongoc_stream_t *)$stream, $buffer, (size_t)$length, (size_t)$min_bytes, (int32_t)$timeout_msec);"
+        end
+
+    c_mongoc_stream_write (stream: POINTER; buffer: POINTER; length: INTEGER; timeout_msec: INTEGER): INTEGER
+            -- Write to stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_write((mongoc_stream_t *)$stream, $buffer, (size_t)$length, (int32_t)$timeout_msec);"
+        end
+
+    c_mongoc_stream_flush (stream: POINTER): INTEGER
+            -- Flush stream buffers
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_flush((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_close (stream: POINTER): INTEGER
+            -- Close stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_close((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_cork (stream: POINTER): INTEGER
+            -- Cork stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_cork((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_uncork (stream: POINTER): INTEGER
+            -- Uncork stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_uncork((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_should_retry (stream: POINTER): BOOLEAN
+            -- Check if operation should be retried
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_should_retry((mongoc_stream_t *)$stream);"
+        end
+
+    c_mongoc_stream_timed_out (stream: POINTER): BOOLEAN
+            -- Check if operation timed out
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_timed_out((mongoc_stream_t *)$stream);"
+        end
+
+feature -- Stream Buffered
+
+    c_mongoc_stream_buffered_new (base_stream: POINTER; buffer_size: INTEGER): POINTER
+            -- Create a new buffered stream that wraps the base stream with specified buffer size
+            -- Parameters:
+            --   base_stream: mongoc_stream_t* - the base stream to buffer
+            --   buffer_size: size_t - initial buffer size in bytes
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_buffered_new((mongoc_stream_t *)$base_stream, (size_t)$buffer_size);"
+        end
+
+feature -- Stream File
+
+    c_mongoc_stream_file_new (fd: INTEGER): POINTER
+            -- Create a new file stream from a file descriptor
+            -- Parameters:
+            --   fd: int - file descriptor
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_file_new((int)$fd);"
+        end
+
+    c_mongoc_stream_file_new_for_path (path: POINTER; flags: INTEGER; mode: INTEGER): POINTER
+            -- Create a new file stream from a file path
+            -- Parameters:
+            --   path: const char* - file path
+            --   flags: int - open flags (O_RDONLY, O_WRONLY, etc.)
+            --   mode: mode_t - file mode (permissions)
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_file_new_for_path((const char *)$path, (int)$flags, (mode_t)$mode);"
+        end
+
+    c_mongoc_stream_file_get_fd (stream: POINTER): INTEGER
+            -- Get the file descriptor from a file stream
+            -- Parameters:
+            --   stream: mongoc_stream_file_t* - the file stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_file_get_fd((mongoc_stream_file_t *)$stream);"
+        end
+
+feature -- Stream Socket
+
+    c_mongoc_stream_socket_new (socket: POINTER): POINTER
+            -- Create a new socket stream from a socket
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to wrap
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_socket_new((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_stream_socket_get_socket (stream: POINTER): POINTER
+            -- Get the underlying socket from a socket stream
+            -- Parameters:
+            --   stream: mongoc_stream_socket_t* - the socket stream
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_stream_socket_get_socket((mongoc_stream_socket_t *)$stream);"
+        end
+
+feature -- Socket
+
+    c_mongoc_socket_new: POINTER
+            -- Create a new socket instance
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_new();"
+        end
+
+    c_mongoc_socket_accept (socket: POINTER): POINTER
+            -- Accept a new client connection
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_accept((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_socket_bind (socket: POINTER; addr: POINTER): BOOLEAN
+            -- Bind the socket to an address
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_bind((mongoc_socket_t *)$socket, (const struct sockaddr *)$addr);"
+        end
+
+    c_mongoc_socket_connect (socket: POINTER; addr: POINTER; timeout_msec: INTEGER): BOOLEAN
+            -- Connect to a remote host
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_connect((mongoc_socket_t *)$socket, (const struct sockaddr *)$addr, (int32_t)$timeout_msec);"
+        end
+
+    c_mongoc_socket_destroy (socket: POINTER)
+            -- Destroy a socket
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_socket_destroy((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_socket_close (socket: POINTER)
+            -- Close a socket
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_socket_close((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_socket_errno (socket: POINTER): INTEGER
+            -- Get the last error code for a socket
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_errno((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_socket_getsockname (socket: POINTER): POINTER
+            -- Get the address to which the socket is bound
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_getsockname((mongoc_socket_t *)$socket);"
+        end
+
+    c_mongoc_socket_listen (socket: POINTER; backlog: INTEGER): BOOLEAN
+            -- Listen for incoming connections
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_listen((mongoc_socket_t *)$socket, (unsigned int)$backlog);"
+        end
+
+    c_mongoc_socket_recv (socket: POINTER; buf: POINTER; size: INTEGER; timeout_msec: INTEGER): INTEGER
+            -- Receive data from a socket
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_recv((mongoc_socket_t *)$socket, (void *)$buf, (size_t)$size, (int32_t)$timeout_msec);"
+        end
+
+    c_mongoc_socket_send (socket: POINTER; buf: POINTER; size: INTEGER; timeout_msec: INTEGER): INTEGER
+            -- Send data through a socket
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_send((mongoc_socket_t *)$socket, (const void *)$buf, (size_t)$size, (int32_t)$timeout_msec);"
+        end
+
+    c_mongoc_socket_setsockopt (socket: POINTER; level: INTEGER; optname: INTEGER; optval: POINTER; optlen: INTEGER): BOOLEAN
+            -- Set socket options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_socket_setsockopt((mongoc_socket_t *)$socket, (int)$level, (int)$optname, (const void *)$optval, (mongoc_socklen_t)$optlen);"
         end
 
 end
