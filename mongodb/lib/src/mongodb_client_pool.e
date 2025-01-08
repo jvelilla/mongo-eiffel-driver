@@ -2,7 +2,7 @@ note
 	description: "Object representing a connection pool for multi-threaded programs"
 	date: "$Date$"
 	revision: "$Revision$"
-
+	EIS: "name=mongoc_client_pool", "src=https://mongoc.org/libmongoc/current/mongoc_client_pool_t.html", "protocol=uri"
 class
 	MONGODB_CLIENT_POOL
 
@@ -17,12 +17,19 @@ feature {NONE} -- Initialization
 
 
 	make_from_uri (a_uri: MONGODB_URI)
-			-- create a new pool using the uri `a_uri'.
+			-- Create a new pool using the uri `a_uri'.
 		local
 			l_ptr: POINTER
+			l_error: BSON_ERROR
 		do
-			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_pool_new (a_uri.item)
-			make_by_pointer (l_ptr)
+			create l_error.make
+				-- https://mongoc.org/libmongoc/current/mongoc_client_pool_new_with_error.html
+			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_pool_new_with_error (a_uri.item, l_error.item)
+			if l_ptr /= default_pointer then
+				make_by_pointer (l_ptr)
+			else
+				error := l_error
+			end
 		end
 
 feature -- Removal
@@ -42,7 +49,7 @@ feature -- Access
 
 
 	pop: MONGODB_CLIENT
-			-- Retrieve a MONGODB_CLIENT from the client pool, possibly blocking until one is available.
+			-- Retrieve a MONGODB_CLIENT from the client pool or create one, possibly blocking until one is available.
 		note
 			EIS: "name=mongoc_client_pool_pop", "src=http://mongoc.org/libmongoc/current/mongoc_client_pool_pop.html", "protocol=uri"
 		do
@@ -60,14 +67,18 @@ feature -- Access
 			has_pop := True
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_pool_try_pop (item)
 			if l_ptr /= default_pointer  then
+				has_pop := True
 				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
 	push (a_client: MONGODB_CLIENT)
 			-- Return a MONGODB_CLIENT `a_client' to the client pool.
+		note
+			EIS: "name=mongoc_client_pool_push", "src=https://mongoc.org/libmongoc/current/mongoc_client_pool_push.html", "protocol=uri"
 		do
-			{MONGODB_EXTERNALS}.C_MONGOC_CLIENT_POOL_PUSH (item, a_client.item)
+			has_pop := False
+			{MONGODB_EXTERNALS}.c_mongoc_client_pool_push (item, a_client.item)
 		end
 
 feature -- Settings
@@ -84,9 +95,19 @@ feature -- Settings
 		local
 			c_name: C_STRING
 			l_res: BOOLEAN
-		once
+			l_error: BSON_ERROR
+		do
 			create c_name.make (a_name)
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_pool_set_appname (item, c_name.item)
+			if not l_res then
+				create l_error.make
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_HANDSHAKE_FAILED,
+					"Failed to set application name. This operation must be called before any client operations begin and can only be called once."
+				)
+				error := l_error
+			end
 		end
 
 
@@ -101,10 +122,52 @@ feature -- Settings
 			not_pop: not has_pop
 		local
 			l_res: BOOLEAN
-		once
+			l_error: BSON_ERROR
+		do
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_pool_set_error_api (item, a_version)
+			if not l_res then
+				create l_error.make
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,        -- Domain: Client-side errors
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_SESSION_FAILURE,  -- Code: Session/configuration failure
+					"Failed to set error API version. This operation must be called before any client operations begin and can only be called once."
+				)
+				error := l_error
+			end
 		end
 
+
+	set_max_size (a_max_pool_size: NATURAL_32)
+			-- Sets the maximum number of pooled connections available from the pool.
+			-- This function is safe to call from multiple threads.
+		note
+			eis: "name=mongoc_client_pool_max_size", "src=https://mongoc.org/libmongoc/current/mongoc_client_pool_max_size.html", "protocol=uri"
+		do
+			{MONGODB_EXTERNALS}.c_mongoc_client_pool_max_size (item, a_max_pool_size)
+		end
+
+	set_server_api (a_api: MONGODB_SERVER_API)
+			-- Set the API version to use for clients created through this pool.
+			-- Once the API version is set on a pool, it may not be changed to a new value.
+			-- This function can only be called once on a pool, and must be called before the first call to `pop` or `try_pop'.
+		require
+			valid_api: a_api /= Void
+			not_pop: not has_pop
+		local
+			l_res: BOOLEAN
+			l_error: BSON_ERROR
+		do
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_pool_set_server_api (item, a_api.item, l_error.item)
+			if not l_res then
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_SESSION_FAILURE,
+					"Failed to set server API version. This operation must be called before any client operations begin and can only be called once."
+				)
+				error := l_error
+			end
+		end
 
 feature {NONE} -- Measurement
 
@@ -122,6 +185,8 @@ feature {NONE} -- Measurement
 		end
 
 	c_mongoc_client_pool_destroy (a_pool: POINTER)
+		note
+			eis: "name=mongoc_client_pool_destroy ", "src=https://mongoc.org/libmongoc/current/mongoc_client_pool_destroy.html", "protocol=uri"
 		external
 			"C inline use <mongoc/mongoc.h>"
 		alias
