@@ -644,6 +644,31 @@ feature -- Mongo Collection
 		end
 
 
+ 	c_mongoc_collection_update_many (collection: POINTER; selector: POINTER; update: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
+            -- Update all documents in collection matching selector
+            -- Parameters:
+            --   collection: mongoc_collection_t* - the collection to update
+            --   selector: const bson_t* - document describing the query to match documents
+            --   update: const bson_t* - document containing update operations or pipeline
+            --   opts: const bson_t* - optional additional options
+            --   reply: bson_t* - optional reply document
+            --   error: bson_error_t* - optional error details
+            -- Returns: true on success, false on failure with error set
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_collection_update_many(
+                    (mongoc_collection_t *)$collection,
+                    (const bson_t *)$selector,
+                    (const bson_t *)$update,
+                    (const bson_t *)$opts,
+                    (bson_t *)$reply,
+                    (bson_error_t *)$error
+                );
+            ]"
+        end
+
 feature -- Collection Operations
 
     c_mongoc_collection_count_documents (collection: POINTER; filter: POINTER; opts: POINTER; read_prefs: POINTER; reply: POINTER; error: POINTER): INTEGER_64
@@ -692,25 +717,23 @@ feature -- Collection Operations
             ]"
         end
 
-    c_mongoc_collection_update_many (collection: POINTER; selector: POINTER; update: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
-            -- Update all documents matching selector
+    c_mongoc_collection_update_many_with_opts (bulk: POINTER; selector: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
+            -- Queue an update operation to update multiple documents with options
             -- Parameters:
-            --   collection: mongoc_collection_t* - the collection to update
-            --   selector: const bson_t* - the query to match documents
-            --   update: const bson_t* - the update to apply
-            --   opts: const bson_t* - optional update options
-            --   reply: bson_t* - optional reply document
-            --   error: bson_error_t* - optional error details
+            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
+            --   selector: const bson_t* - document describing the query to match documents
+            --   document: const bson_t* - document containing the update operations
+            --   opts: const bson_t* - optional additional options
+            --   error: bson_error_t* - error information
         external
             "C inline use <mongoc/mongoc.h>"
         alias
             "[
-                return mongoc_collection_update_many(
-                    (mongoc_collection_t *)$collection,
+                return mongoc_collection_update_many_with_opts(
+                    (mongoc_collection_t *)$bulk,
                     (const bson_t *)$selector,
-                    (const bson_t *)$update,
+                    (const bson_t *)$document,
                     (const bson_t *)$opts,
-                    (bson_t *)$reply,
                     (bson_error_t *)$error
                 );
             ]"
@@ -949,6 +972,50 @@ feature -- Mongo Client Pool
 		alias
 			"[
 				return (EIF_BOOLEAN) mongoc_client_pool_set_error_api ((mongoc_client_pool_t *)$a_pool, (int32_t)$a_version);
+			]"
+		end
+
+	c_mongoc_client_pool_max_size (a_pool: POINTER; a_max_pool_size: NATURAL_32)
+			-- Sets the maximum number of pooled connections available
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				mongoc_client_pool_max_size((mongoc_client_pool_t *)$a_pool, (uint32_t)$a_max_pool_size);
+			]"
+		end
+
+	c_mongoc_client_pool_new_with_error (a_uri: POINTER; a_error: POINTER): POINTER
+			-- Creates a new client pool using the URI provided, with error handling
+			-- Parameters:
+			--   a_uri: const mongoc_uri_t* - The URI to use
+			--   a_error: bson_error_t* - Optional error location
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_client_pool_new_with_error(
+					(const mongoc_uri_t *)$a_uri,
+					(bson_error_t *)$a_error
+				);
+			]"
+		end
+
+	c_mongoc_client_pool_set_server_api (a_pool: POINTER; a_api: POINTER; a_error: POINTER): BOOLEAN
+			-- Set the API version to use for clients created through pool
+			-- Parameters:
+			--   a_pool: mongoc_client_pool_t* - The client pool instance
+			--   a_api: const mongoc_server_api_t* - The server API version
+			--   a_error: bson_error_t* - Error information
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_client_pool_set_server_api(
+					(mongoc_client_pool_t *)$a_pool,
+					(const mongoc_server_api_t *)$a_api,
+					(bson_error_t *)$a_error
+				);
 			]"
 		end
 
