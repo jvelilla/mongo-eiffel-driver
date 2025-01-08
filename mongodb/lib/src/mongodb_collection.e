@@ -538,29 +538,6 @@ feature -- Indexes
 			result_not_void: Result /= Void
 		end
 
-feature -- Status Report
-
-	has_error: BOOLEAN
-			-- Indicates that there was an error during the last operation
-		do
-			Result := attached error
-		end
-
-	error_string: STRING
-			-- Output a related error message.
-		require
-			was_error: has_error
-		do
-			if attached {BSON_ERROR} error as l_error then
-				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message.out + "]"
-			else
-				Result := "Unknown Error"
-			end
-		end
-
-	error: detachable BSON_ERROR
-			-- last error.	
-
 feature -- Drop
 
 	drop_with_opts	(a_opts: detachable BSON)

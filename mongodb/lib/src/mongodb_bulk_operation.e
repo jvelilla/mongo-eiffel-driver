@@ -76,28 +76,6 @@ feature -- Access
             write_concern_not_void: Result /= Void
         end
 
-feature -- Error
-
-	has_error: BOOLEAN
-			-- Indicates that there was an error during the last operation
-		do
-			Result := attached error
-		end
-
-	error_string: STRING
-			-- Output a related error message.
-		require
-			was_error: has_error
-		do
-			if attached {BSON_ERROR} error as l_error then
-				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message.out + "]"
-			else
-				Result := "Unknown Error"
-			end
-		end
-
-	error: detachable BSON_ERROR
-
 feature -- Removal
 
 	dispose
@@ -110,17 +88,16 @@ feature -- Removal
 
 feature -- Operations
 
-	insert (a_document: BSON): BOOLEAN
+	insert (a_document: BSON)
             -- Queue an insert operation
             -- `a_document`: A bson_t containing the document to insert
-            -- Returns True on success, False on error
         note
         	eis: "name=mongoc_bulk_operation_insert ", "src=https://mongoc.org/libmongoc/current/mongoc_bulk_operation_insert.html", "protocol=uri"
         do
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_insert (item, a_document.item)
+            {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_insert (item, a_document.item)
         end
 
-    insert_with_opts (a_document: BSON; a_opts: detachable BSON): BOOLEAN
+    insert_with_opts (a_document: BSON; a_opts: detachable BSON)
             -- Queue an insert operation with options
             -- `a_document`: The document to insert
             -- `a_opts`: Optional additional options (may be Void)
@@ -133,22 +110,21 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+            l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_insert_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_insert_with_opts (
                 item,            -- bulk operation
                 a_document.item, -- document to insert
                 l_opts,          -- options
                 l_error.item     -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
 	remove (a_selector: BSON)
@@ -164,7 +140,7 @@ feature -- Operations
             )
         end
 
-    remove_many_with_opts (a_selector: BSON; a_opts: detachable BSON): BOOLEAN
+    remove_many_with_opts (a_selector: BSON; a_opts: detachable BSON)
             -- Queue a remove operation to remove all documents matching the selector with additional options.
             -- `a_selector`: A BSON document containing the query to match documents for removal
             -- `a_opts`: Optional BSON document containing additional options:
@@ -177,22 +153,21 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+        	l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_remove_many_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_remove_many_with_opts (
                 item,              -- bulk operation
                 a_selector.item,   -- selector
                 l_opts,           -- options (may be null)
                 l_error.item      -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
     remove_one (a_selector: BSON)
@@ -208,7 +183,7 @@ feature -- Operations
             )
         end
 
-    remove_one_with_opts (a_selector: BSON; a_opts: detachable BSON): BOOLEAN
+    remove_one_with_opts (a_selector: BSON; a_opts: detachable BSON)
             -- Queue a remove operation to remove a single document matching the selector with additional options.
             -- `a_selector`: A BSON document containing the query to match document for removal
             -- `a_opts`: Optional BSON document containing additional options:
@@ -221,29 +196,28 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+            l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_remove_one_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_remove_one_with_opts (
                 item,              -- bulk operation
                 a_selector.item,   -- selector
                 l_opts,            -- options
                 l_error.item       -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
     replace_one (a_selector: BSON; a_document: BSON; a_upsert: BOOLEAN)
             -- Queue a replace operation to replace a single document matching the selector.
             -- Note: This only queues the operation. To execute it, call `execute`.
             -- `a_selector`: A BSON document containing the query to match document for replacement
-            -- `a_document`: A BSON document containing the replacement document 
+            -- `a_document`: A BSON document containing the replacement document
             -- `a_upsert`: True if this should be an upsert (insert if not found)
         note
         	eis: "name=mongoc_bulk_operation_replace_one", "src=https://mongoc.org/libmongoc/current/mongoc_bulk_operation_replace_one.html", "protocol=uri"
@@ -256,7 +230,7 @@ feature -- Operations
             )
         end
 
-    replace_one_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON): BOOLEAN
+    replace_one_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON)
             -- Queue a replace operation to replace a single document matching the selector with additional options.
             -- `a_selector`: A BSON document containing the query to match document for replacement
             -- `a_document`: A BSON document containing the replacement document
@@ -271,23 +245,22 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+            l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_replace_one_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_replace_one_with_opts (
                 item,              -- bulk operation
                 a_selector.item,   -- selector
                 a_document.item,   -- replacement document
                 l_opts,            -- options
                 l_error.item       -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
     update (a_selector: BSON; a_document: BSON; a_upsert: BOOLEAN)
@@ -308,7 +281,7 @@ feature -- Operations
             )
         end
 
-    update_many_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON): BOOLEAN
+    update_many_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON)
             -- Queue an update operation to update all documents matching the selector with additional options.
             -- `a_selector`: A BSON document containing the query to match documents for update
             -- `a_document`: A BSON document containing the update operations (must start with $)
@@ -324,23 +297,22 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+            l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_update_many_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_update_many_with_opts (
                 item,              -- bulk operation
                 a_selector.item,   -- selector
                 a_document.item,   -- update document
                 l_opts,            -- options
                 l_error.item       -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
     update_one (a_selector: BSON; a_document: BSON; a_upsert: BOOLEAN)
@@ -361,7 +333,7 @@ feature -- Operations
             )
         end
 
-    update_one_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON): BOOLEAN
+    update_one_with_opts (a_selector: BSON; a_document: BSON; a_opts: detachable BSON)
             -- Queue an update operation to update a single document matching the selector with additional options.
             -- `a_selector`: A BSON document containing the query to match document for update
             -- `a_document`: A BSON document containing the update operations (must start with $)
@@ -377,23 +349,22 @@ feature -- Operations
         local
             l_error: BSON_ERROR
             l_opts: POINTER
+            l_res: BOOLEAN
         do
             if attached a_opts then
                 l_opts := a_opts.item
             end
             create l_error.make
-            Result := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_update_one_with_opts (
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_bulk_operation_update_one_with_opts (
                 item,              -- bulk operation
                 a_selector.item,   -- selector
                 a_document.item,   -- update document
                 l_opts,            -- options
                 l_error.item       -- error info
             )
-            if not Result then
+            if not l_res then
                 create error.make_by_pointer (l_error.item)
             end
-        ensure
-            error_set: not Result implies error /= Void
         end
 
 feature -- Settings

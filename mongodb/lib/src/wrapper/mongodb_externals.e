@@ -395,6 +395,93 @@ feature -- Client
 			"return mongoc_client_select_server ((mongoc_client_t *)$a_client, (bool)$a_for_writes, (const mongoc_read_prefs_t *)$a_prefs, (bson_error_t *)$a_error);"
 		end
 
+
+    c_mongoc_client_get_crypt_shared_version (a_client: POINTER): POINTER
+            -- Obtain the version string of the crypt_shared that is loaded for auto-encryption.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return (EIF_POINTER) mongoc_client_get_crypt_shared_version ((const mongoc_client_t *)$a_client);"
+        end
+
+	c_mongoc_client_get_handshake_description (a_client: POINTER; a_server_id: NATURAL_32; a_opts: POINTER; a_error: POINTER): POINTER
+			-- Returns a description constructed from the initial handshake response to a server.
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_client_get_handshake_description(
+					(mongoc_client_t *)$a_client,
+					(uint32_t)$a_server_id,
+					(bson_t *)$a_opts,
+					(bson_error_t *)$a_error
+				);
+			]"
+		end
+
+
+    c_mongoc_client_read_command_with_opts (a_client: POINTER; a_db_name: POINTER; a_command: POINTER;
+            a_read_prefs: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic specific to read commands
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_client_read_command_with_opts(
+                    (mongoc_client_t *)$a_client,
+                    (const char *)$a_db_name,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+	c_mongoc_client_new_from_uri_with_error (a_uri: POINTER; a_error: POINTER): POINTER
+			-- Creates a new mongoc_client_t using the mongoc_uri_t provided.
+			-- Parameters:
+			--   a_uri: const mongoc_uri_t* - The URI to use
+			--   a_error: bson_error_t* - Optional error location
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_client_new_from_uri_with_error(
+					(const mongoc_uri_t *)$a_uri,
+					(bson_error_t *)$a_error
+				);
+			]"
+		end
+
+	c_mongoc_client_reset (a_client: POINTER)
+			-- Call this method in the child after forking to invalidate the client.
+			-- Prevents resource cleanup in the child process from interfering with the parent process.
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_client_reset ((mongoc_client_t *)$a_client);"
+		end
+
+	c_mongoc_client_set_server_api (a_client: POINTER; a_api: POINTER; a_error: POINTER): BOOLEAN
+			-- Set the API version to use for client.
+			-- Parameters:
+			--   a_client: mongoc_client_t* - The client instance
+			--   a_api: const mongoc_server_api_t* - The server API version
+			--   a_error: bson_error_t* - Error information
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"[
+				return mongoc_client_set_server_api(
+					(mongoc_client_t *)$a_client,
+					(const mongoc_server_api_t *)$a_api,
+					(bson_error_t *)$a_error
+				);
+			]"
+		end
+
 feature -- Mongo Collection
 
 	c_mongoc_collection_insert_one (a_collection: POINTER; a_document: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
@@ -1247,13 +1334,13 @@ feature -- Bulk Operations
             ]"
         end
 
-    c_mongoc_bulk_operation_insert (bulk: POINTER; document: POINTER): BOOLEAN
+    c_mongoc_bulk_operation_insert (bulk: POINTER; document: POINTER)
             -- Queue an insert operation
         external
             "C inline use <mongoc/mongoc.h>"
         alias
             "[
-                return mongoc_bulk_operation_insert(
+                mongoc_bulk_operation_insert(
                     (mongoc_bulk_operation_t *)$bulk,
                     (const bson_t *)$document
                 );
@@ -1583,6 +1670,84 @@ feature -- Bulk Operations
                     (const mongoc_bulk_operation_t *)$bulk
                 );
             ]"
+        end
+
+    c_mongoc_client_read_write_command_with_opts (a_client: POINTER; a_db_name: POINTER; a_command: POINTER;
+            a_read_prefs: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic for commands that both read and write
+            -- Note: The read_prefs parameter is ignored (included by mistake in libmongoc 1.5)
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_client_read_write_command_with_opts(
+                    (mongoc_client_t *)$a_client,
+                    (const char *)$a_db_name,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+feature -- Server API
+
+    c_mongoc_server_api_new (a_version: INTEGER): POINTER
+            -- Create a new server API instance.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_server_api_new((mongoc_server_api_version_t)$a_version);"
+        end
+
+    c_mongoc_server_api_destroy (a_api: POINTER)
+            -- Destroy a server API instance.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_server_api_destroy((mongoc_server_api_t *)$a_api);"
+        end
+
+    c_mongoc_server_api_get_version (a_api: POINTER): INTEGER
+            -- Get the version set on this server API.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return (EIF_INTEGER)mongoc_server_api_get_version((const mongoc_server_api_t *)$a_api);"
+        end
+
+    c_mongoc_server_api_get_strict (a_api: POINTER): BOOLEAN
+            -- Get whether strict mode is enabled.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return (EIF_BOOLEAN)mongoc_server_api_get_strict((const mongoc_server_api_t *)$a_api);"
+        end
+
+    c_mongoc_server_api_get_deprecation_errors (a_api: POINTER): BOOLEAN
+            -- Get whether deprecation errors are enabled.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return (EIF_BOOLEAN)mongoc_server_api_get_deprecation_errors((const mongoc_server_api_t *)$a_api);"
+        end
+
+    c_mongoc_server_api_strict (a_api: POINTER; a_strict: BOOLEAN)
+            -- Set whether strict mode is enabled.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_server_api_strict((mongoc_server_api_t *)$a_api, (bool)$a_strict);"
+        end
+
+    c_mongoc_server_api_deprecation_errors (a_api: POINTER; a_deprecation_errors: BOOLEAN)
+            -- Set whether deprecation errors are enabled.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_server_api_deprecation_errors((mongoc_server_api_t *)$a_api, (bool)$a_deprecation_errors);"
         end
 
 end

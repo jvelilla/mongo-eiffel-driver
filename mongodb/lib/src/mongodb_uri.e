@@ -24,14 +24,14 @@ create
 
 feature {NONE}-- Initialization
 
-	make (a_uri: STRING_8)
+	make (a_uri: READABLE_STRING_GENERAL)
 			-- Creates a new MongoClient using the URI string `a_uri' provided.
 		do
 			memory_make
 			uri_new (a_uri)
 		end
 
-	uri_new (a_uri: STRING_8)
+	uri_new (a_uri: READABLE_STRING_GENERAL)
 		local
 			c_string: C_STRING
 			l_bson_error: BSON_ERROR
@@ -60,7 +60,7 @@ feature -- Removal
 
 feature -- Access
 
-	uri_string: STRING_8
+	uri_string: READABLE_STRING_GENERAL
 			-- String representation of current URI.
 		note
 			EIS: "name=mongoc_uri_get_string", "src=http://mongoc.org/libmongoc/current/mongoc_uri_get_string.html", "protocol=uri"
