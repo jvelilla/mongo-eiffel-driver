@@ -26,11 +26,11 @@ inherit
 
 	MONGODB_WRAPPER_BASE
 		rename
-			make as make_base
+			make as make_default
 		end
 
 create
-	make
+	make, make_default
 
 feature -- Creation
 

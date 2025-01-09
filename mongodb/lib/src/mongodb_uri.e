@@ -36,16 +36,16 @@ feature {NONE}-- Initialization
 			c_string: C_STRING
 			l_bson_error: BSON_ERROR
 			l_ptr: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
 		do
+			create l_error.make
 			create c_string.make (a_uri)
-			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_uri_new_with_error (c_string.item, l_error)
-			if l_error /= default_pointer then
-				create l_bson_error.make_by_pointer (l_error)
+			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_uri_new_with_error (c_string.item, l_error.item)
+			if l_ptr /= default_pointer then
+				make_by_pointer (l_ptr)
+			else
+				create l_bson_error.make_by_pointer (l_error.item)
 			end
-
-			make_by_pointer (l_ptr)
-			check success: item /= default_pointer end
 		end
 
 feature -- Removal

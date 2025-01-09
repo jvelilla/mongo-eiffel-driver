@@ -16,18 +16,29 @@ create
 
 feature {NONE} -- Initialization
 
-	make_from_database (a_database: MONGODB_DATABASE; a_opts: detachable BSON)
-			-- Create a new GridFS bucket instance using database `a_database` with optional settings `a_opts`.
+	make_from_database (a_database: MONGODB_DATABASE; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE)
+			-- Create a new GridFS bucket instance using database `a_database` with optional settings `a_opts`
+			-- and optional read preferences `a_read_prefs`.
+			-- Note: If `a_read_prefs` is Void, inherits read preferences from database.
 		local
 			l_error: BSON_ERROR
 			l_ptr: POINTER
 			l_opts: POINTER
+			l_read_prefs: POINTER
 		do
 			create l_error.make
 			if attached a_opts as opts then
 				l_opts := opts.item
 			end
-			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_gridfs_bucket_new (a_database.item, l_opts, l_error.item)
+			if attached a_read_prefs as prefs then
+				l_read_prefs := prefs.item
+			end
+				-- https://mongoc.org/libmongoc/current/mongoc_gridfs_bucket_new.html
+			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_gridfs_bucket_new (
+										a_database.item, 	-- db
+										l_opts, 			-- opts
+										l_read_prefs, 		-- read_prefs
+										l_error.item) 		-- error
 			if l_ptr /= default_pointer then
 				make_by_pointer (l_ptr)
 			else

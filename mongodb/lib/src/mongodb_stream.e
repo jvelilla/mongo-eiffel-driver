@@ -59,7 +59,7 @@ feature -- Operations
                 create l_error.make
                 l_error.set_error (
                     {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM,
-                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,  
+                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,
                     "Failed to write to stream. The stream may be closed, in an invalid state, or the write operation failed."
                 )
                 error := l_error
@@ -106,45 +106,45 @@ feature -- Operations
             end
         end
 
-    cork
-            -- Cork the stream, preventing writes
-        note
-        	EIS: "name=mongoc_stream_cork", "src=https://mongoc.org/libmongoc/current/mongoc_stream_cork.html", "protocol=uri"
-        local
-            l_res: INTEGER
-            l_error: BSON_ERROR
-        do
-            l_res := {MONGODB_EXTERNALS}.c_mongoc_stream_cork (item)
-            if l_res = -1 then
-                create l_error.make
-                l_error.set_error (
-                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM,
-                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,
-                    "Failed to cork stream. The stream may be in an invalid state or already corked."
-                )
-                error := l_error
-            end
-        end
+--    cork
+--            -- Cork the stream, preventing writes
+--        note
+--        	EIS: "name=mongoc_stream_cork", "src=https://mongoc.org/libmongoc/current/mongoc_stream_cork.html", "protocol=uri"
+--        local
+--            l_res: INTEGER
+--            l_error: BSON_ERROR
+--        do
+--            l_res := {MONGODB_EXTERNALS}.c_mongoc_stream_cork (item)
+--            if l_res = -1 then
+--                create l_error.make
+--                l_error.set_error (
+--                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM,
+--                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,
+--                    "Failed to cork stream. The stream may be in an invalid state or already corked."
+--                )
+--                error := l_error
+--            end
+--        end
 
-    uncork
-            -- Uncork the stream, allowing writes
-        note
-            eis:"name=mongoc_stream_uncork", "src=https://mongoc.org/libmongoc/current/mongoc_stream_uncork.html", "protocol=uri"
-        local
-            l_res: INTEGER
-            l_error: BSON_ERROR
-        do
-            l_res := {MONGODB_EXTERNALS}.c_mongoc_stream_uncork (item)
-            if l_res = -1 then
-                create l_error.make
-                l_error.set_error (
-                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM,
-                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,
-                    "Failed to uncork stream. The stream may be in an invalid state or not corked."
-                )
-                error := l_error
-            end
-        end
+--    uncork
+--            -- Uncork the stream, allowing writes
+--        note
+--            eis:"name=mongoc_stream_uncork", "src=https://mongoc.org/libmongoc/current/mongoc_stream_uncork.html", "protocol=uri"
+--        local
+--            l_res: INTEGER
+--            l_error: BSON_ERROR
+--        do
+--            l_res := {MONGODB_EXTERNALS}.c_mongoc_stream_uncork (item)
+--            if l_res = -1 then
+--                create l_error.make
+--                l_error.set_error (
+--                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM,
+--                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_STREAM_SOCKET,
+--                    "Failed to uncork stream. The stream may be in an invalid state or not corked."
+--                )
+--                error := l_error
+--            end
+--        end
 
 feature -- Status Report
 

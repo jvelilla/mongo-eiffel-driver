@@ -31,14 +31,16 @@ feature {NONE}-- Initialization
 		end
 
 	make_from_uri (a_uri: MONGODB_URI)
-			-- Create a new client using `a_uri` prvided
+			-- Create a new client using `a_uri` provided
 		note
 			eis: "name=mongoc_client_new_from_uri ", "src=https://mongoc.org/libmongoc/current/mongoc_client_new_from_uri.html", "protocol=uri"
+		local
+			l_ptr: POINTER
+			l_error: BSON_ERROR
 		do
 			memory_make
 			mongoc_init
-			make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_new_from_uri (a_uri.item))
-			check success: item /= default_pointer end
+			new_from_uri_with_error (a_uri)
 		end
 
 	new_mongoc_client (a_uri: READABLE_STRING_GENERAL)
@@ -56,8 +58,6 @@ feature {NONE}-- Initialization
 	new_from_uri_with_error (a_uri: MONGODB_URI)
 			-- Creates a new client instance using the provided URI.
 			-- Sets the error attribute if creation fails.
-			--| TODO review the code and update to always use
-			--| THIS FEATURE.
 		local
 			l_error: BSON_ERROR
 			l_ptr: POINTER
@@ -68,7 +68,6 @@ feature {NONE}-- Initialization
 			if l_ptr = default_pointer then
 				error := l_error
 			else
-				error := Void
 				make_by_pointer (l_ptr)
 			end
 		end
@@ -213,18 +212,17 @@ feature -- Access
 		local
 			l_opts: POINTER
 			l_ptr: POINTER
+			l_error: BSON_ERROR
 		do
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_find_databases_with_opts (item, l_opts)
 			if l_ptr = default_pointer then
-				-- Handle error case
-				create Result.make (default_pointer)
-				error := create {BSON_ERROR}.make
+					-- Handle error case
+				create Result.make_default
 			else
 				create Result.make (l_ptr)
-				error := Void
 			end
 		ensure
 			result_not_void: Result /= Void
@@ -658,7 +656,7 @@ feature -- Command
 			end
 		end
 
-	command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_opts:detachable BSON;  a_reply: BSON; a_error: detachable BSON_ERROR)
+	command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_opts:detachable BSON;  a_reply: BSON)
 			-- Execute a command on the server, interpreting opts according to the MongoDB server version.
 			-- 'a_db_name': The name of the database to run the command on.
 			-- 'a_command': A bson_t containing the command specification.
@@ -672,7 +670,7 @@ feature -- Command
 			c_db: C_STRING
 			l_read_prefs: POINTER
 			l_opts: POINTER
-			l_error: POINTER
+			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
 			create c_db.make (a_db_name)
@@ -682,10 +680,11 @@ feature -- Command
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
-			if attached a_error then
-				l_error := a_error.item
+			create l_error.make
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_with_opts (item, c_db.item, a_command.item, l_read_prefs, l_opts, a_reply.item, l_error.item)
+			if not l_res then
+				create error.make_by_pointer (l_error.item)
 			end
-			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_with_opts (item, c_db.item, a_command.item, l_read_prefs, l_opts, a_reply.item, l_error)
 		end
 
 feature -- Session

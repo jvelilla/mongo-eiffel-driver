@@ -22,13 +22,13 @@ create
 
 feature {NONE} -- Initialization
 
-    make
+    make (a_domain: INTEGER; a_type: INTEGER; a_protocol: INTEGER)
             -- Create a new socket instance
         local
             l_ptr: POINTER
             l_error: BSON_ERROR
         do
-            l_ptr := {MONGODB_EXTERNALS}.c_mongoc_socket_new
+            l_ptr := {MONGODB_EXTERNALS}.c_mongoc_socket_new (a_domain, a_type, a_protocol)
             if l_ptr /= default_pointer then
                 make_by_pointer (l_ptr)
             else
@@ -44,37 +44,45 @@ feature {NONE} -- Initialization
 
 feature -- Operations
 
-    accept: detachable MONGODB_SOCKET
+    accept (a_expire_at: INTEGER_64): detachable MONGODB_SOCKET
             -- Accept a new client connection
         require
             valid_socket: item /= default_pointer
         local
             l_ptr: POINTER
         do
-            l_ptr := {MONGODB_EXTERNALS}.c_mongoc_socket_accept (item)
+        		-- TODO double check
+            l_ptr := {MONGODB_EXTERNALS}.c_mongoc_socket_accept (item, a_expire_at)
             if l_ptr /= default_pointer then
                 create Result.make_by_pointer (l_ptr)
             end
         end
 
-    bind (a_addr: POINTER): BOOLEAN
+    bind (a_addr: POINTER; a_addrlen: INTEGER): BOOLEAN
             -- Bind the socket to an address
             -- `a_addr`: The address to bind to
         require
             valid_socket: item /= default_pointer
+            valid_addlen: a_addrlen > 0
         do
-            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_bind (item, a_addr)
+        		-- TODO double check
+        		-- See how to use SOCKET from EiffelNet.
+            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_bind (item, a_addr, a_addrlen)
         end
 
-    connect (a_addr: POINTER; a_timeout_msec: INTEGER): BOOLEAN
+    connect (a_addr: POINTER; a_addrlen: INTEGER; a_timeout_msec: INTEGER): BOOLEAN
             -- Connect to a remote host
             -- `a_addr`: The address to connect to
             -- `a_timeout_msec`: Timeout in milliseconds
         require
             valid_socket: item /= default_pointer
+            valid_addr: a_addr /= default_pointer
+            valid_addrlen: a_addrlen > 0
             valid_timeout: a_timeout_msec >= -1
         do
-            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_connect (item, a_addr, a_timeout_msec)
+        		-- TODO double check.
+        		-- See if we can use SOCKET from EiffelNet.
+            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_connect (item, a_addr, a_addrlen, a_timeout_msec)
         end
 
     close
@@ -95,10 +103,11 @@ feature -- Operations
             Result := {MONGODB_EXTERNALS}.c_mongoc_socket_listen (item, a_backlog)
         end
 
-    recv (a_buffer: POINTER; a_size: INTEGER; a_timeout_msec: INTEGER): INTEGER
+    recv (a_buffer: POINTER; a_size: INTEGER; a_flag: INTEGER; a_timeout_msec: INTEGER_64): INTEGER
             -- Receive data from the socket
             -- `a_buffer`: Buffer to store received data
             -- `a_size`: Size of the buffer
+            -- `a_flag`: flags for recv
             -- `a_timeout_msec`: Timeout in milliseconds
         require
             valid_socket: item /= default_pointer
@@ -106,7 +115,7 @@ feature -- Operations
             valid_size: a_size > 0
             valid_timeout: a_timeout_msec >= -1
         do
-            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_recv (item, a_buffer, a_size, a_timeout_msec)
+            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_recv (item, a_buffer, a_size, a_flag, a_timeout_msec)
         end
 
     send (a_buffer: POINTER; a_size: INTEGER; a_timeout_msec: INTEGER): INTEGER
@@ -148,7 +157,7 @@ feature -- Access
         require
             valid_socket: item /= default_pointer
         do
-            Result := {MONGODB_EXTERNALS}.c_mongoc_socket_getsockname (item)
+           -- TODO
         end
 
 feature -- Removal

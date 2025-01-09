@@ -717,28 +717,6 @@ feature -- Collection Operations
             ]"
         end
 
-    c_mongoc_collection_update_many_with_opts (bulk: POINTER; selector: POINTER; document: POINTER; opts: POINTER; error: POINTER): BOOLEAN
-            -- Queue an update operation to update multiple documents with options
-            -- Parameters:
-            --   bulk: mongoc_bulk_operation_t* - the bulk operation handle
-            --   selector: const bson_t* - document describing the query to match documents
-            --   document: const bson_t* - document containing the update operations
-            --   opts: const bson_t* - optional additional options
-            --   error: bson_error_t* - error information
-        external
-            "C inline use <mongoc/mongoc.h>"
-        alias
-            "[
-                return mongoc_collection_update_many_with_opts(
-                    (mongoc_bulk_operation_t *)$bulk,
-                    (const bson_t *)$selector,
-                    (const bson_t *)$document,
-                    (const bson_t *)$opts,
-                    (bson_error_t *)$error
-                );
-            ]"
-        end
-
     c_mongoc_collection_command_simple (collection: POINTER; command: POINTER; read_prefs: POINTER; reply: POINTER; error: POINTER): BOOLEAN
             -- Execute a command on the collection.
             -- Parameters:
@@ -1845,8 +1823,13 @@ feature -- Server API
 
 feature -- GridFS Bucket
 
-    c_mongoc_gridfs_bucket_new (database: POINTER; opts: POINTER; error: POINTER): POINTER
+    c_mongoc_gridfs_bucket_new (database: POINTER; opts: POINTER; read_prefs: POINTER; error: POINTER): POINTER
             -- Create a new GridFS bucket instance
+            -- Parameters:
+            --   database: mongoc_database_t* - the database to create bucket in
+            --   opts: const bson_t* - optional settings document or NULL
+            --   read_prefs: const mongoc_read_prefs_t* - read preferences or NULL
+            --   error: bson_error_t* - error information
         external
             "C inline use <mongoc/mongoc.h>"
         alias
@@ -1854,6 +1837,7 @@ feature -- GridFS Bucket
                 return mongoc_gridfs_bucket_new(
                     (mongoc_database_t *)$database,
                     (const bson_t *)$opts,
+                    (const mongoc_read_prefs_t *)$read_prefs,
                     (bson_error_t *)$error
                 );
             ]"
@@ -1934,21 +1918,21 @@ feature -- Stream
             "return mongoc_stream_close((mongoc_stream_t *)$stream);"
         end
 
-    c_mongoc_stream_cork (stream: POINTER): INTEGER
-            -- Cork stream
-        external
-            "C inline use <mongoc/mongoc.h>"
-        alias
-            "return mongoc_stream_cork((mongoc_stream_t *)$stream);"
-        end
+--    c_mongoc_stream_cork (stream: POINTER): INTEGER
+--            -- Cork stream
+--        external
+--            "C inline use <mongoc/mongoc.h>"
+--        alias
+--            "return mongoc_stream_cork((mongoc_stream_t *)$stream);"
+--        end
 
-    c_mongoc_stream_uncork (stream: POINTER): INTEGER
-            -- Uncork stream
-        external
-            "C inline use <mongoc/mongoc.h>"
-        alias
-            "return mongoc_stream_uncork((mongoc_stream_t *)$stream);"
-        end
+--    c_mongoc_stream_uncork (stream: POINTER): INTEGER
+--            -- Uncork stream
+--        external
+--            "C inline use <mongoc/mongoc.h>"
+--        alias
+--            "return mongoc_stream_uncork((mongoc_stream_t *)$stream);"
+--        end
 
     c_mongoc_stream_should_retry (stream: POINTER): BOOLEAN
             -- Check if operation should be retried
@@ -1995,12 +1979,12 @@ feature -- Stream File
             -- Create a new file stream from a file path
             -- Parameters:
             --   path: const char* - file path
-            --   flags: int - open flags (O_RDONLY, O_WRONLY, etc.)
-            --   mode: mode_t - file mode (permissions)
+            --   flags: Flags to be passed to open().
+            --   mode:  An optional mode to be passed to open() when creating a file.
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_stream_file_new_for_path((const char *)$path, (int)$flags, (mode_t)$mode);"
+            "return mongoc_stream_file_new_for_path((const char *)$path, (int)$flags,(int)$mode);"
         end
 
     c_mongoc_stream_file_get_fd (stream: POINTER): INTEGER
@@ -2037,36 +2021,64 @@ feature -- Stream Socket
 
 feature -- Socket
 
-    c_mongoc_socket_new: POINTER
+    c_mongoc_socket_new (domain, type, protocol: INTEGER): POINTER
             -- Create a new socket instance
+            -- Parameters:
+            --   domain: The socket domain (e.g., AF_INET, AF_INET6)
+            --   type: The socket type (e.g., SOCK_STREAM)
+            --   protocol: The socket protocol (usually 0)
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_new();"
+            "return mongoc_socket_new((int)$domain, (int)$type, (int)$protocol);"
         end
 
-    c_mongoc_socket_accept (socket: POINTER): POINTER
+    c_mongoc_socket_accept (socket: POINTER; expire_at: INTEGER_64): POINTER
             -- Accept a new client connection
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to accept connections on
+            --   expire_at: int64_t - when to timeout the operation (monotonic clock, msec)
+            -- Returns: A newly allocated mongoc_socket_t if successful; otherwise NULL.
+            -- Note: expire_at is a timeout in milliseconds, use -1 for no timeout
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_accept((mongoc_socket_t *)$socket);"
+            "return mongoc_socket_accept((mongoc_socket_t *)$socket, (int64_t)$expire_at);"
         end
 
-    c_mongoc_socket_bind (socket: POINTER; addr: POINTER): BOOLEAN
+    c_mongoc_socket_bind (socket: POINTER; addr: POINTER; addrlen: INTEGER): BOOLEAN
             -- Bind the socket to an address
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to bind
+            --   addr: const struct sockaddr* - the address to bind to
+            --   addrlen: mongoc_socklen_t - the length of the address structure
+            -- Returns: TRUE if successful; otherwise FALSE and errno is set
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_bind((mongoc_socket_t *)$socket, (const struct sockaddr *)$addr);"
+            "return mongoc_socket_bind((mongoc_socket_t *)$socket, (const struct sockaddr *)$addr, (mongoc_socklen_t)$addrlen);"
         end
 
-    c_mongoc_socket_connect (socket: POINTER; addr: POINTER; timeout_msec: INTEGER): BOOLEAN
+    c_mongoc_socket_connect (socket: POINTER; addr: POINTER; addrlen: INTEGER; expire_at: INTEGER_64): BOOLEAN
             -- Connect to a remote host
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to connect
+            --   addr: const struct sockaddr* - the address to connect to
+            --   addrlen: mongoc_socklen_t - the length of the address structure
+            --   expire_at: int64_t - absolute timeout in milliseconds (monotonic clock)
+            -- Returns: TRUE if successful; otherwise FALSE and errno is set
+            -- Note: expire_at is an absolute timeout, add your desired timeout to current monotonic clock time
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_connect((mongoc_socket_t *)$socket, (const struct sockaddr *)$addr, (int32_t)$timeout_msec);"
+            "[
+                return mongoc_socket_connect(
+                    (mongoc_socket_t *)$socket,
+                    (const struct sockaddr *)$addr,
+                    (mongoc_socklen_t)$addrlen,
+                    (int64_t)$expire_at
+                );
+            ]"
         end
 
     c_mongoc_socket_destroy (socket: POINTER)
@@ -2093,12 +2105,18 @@ feature -- Socket
             "return mongoc_socket_errno((mongoc_socket_t *)$socket);"
         end
 
-    c_mongoc_socket_getsockname (socket: POINTER): POINTER
+    c_mongoc_socket_getsockname (socket: POINTER; addr: POINTER; addrlen: POINTER): INTEGER
             -- Get the address to which the socket is bound
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to query
+            --   addr: struct sockaddr* - buffer to store the socket address
+            --   addrlen: mongoc_socklen_t* - on input, the size of addr buffer; on output, the actual size used
+            -- Returns: 0 on success, -1 on failure and errno is set
+            -- Note: addrlen should contain the size of addr when calling this function
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_getsockname((mongoc_socket_t *)$socket);"
+            "return mongoc_socket_getsockname((mongoc_socket_t *)$socket, (struct sockaddr *)$addr, (mongoc_socklen_t *)$addrlen);"
         end
 
     c_mongoc_socket_listen (socket: POINTER; backlog: INTEGER): BOOLEAN
@@ -2109,12 +2127,28 @@ feature -- Socket
             "return mongoc_socket_listen((mongoc_socket_t *)$socket, (unsigned int)$backlog);"
         end
 
-    c_mongoc_socket_recv (socket: POINTER; buf: POINTER; size: INTEGER; timeout_msec: INTEGER): INTEGER
+    c_mongoc_socket_recv (socket: POINTER; buf: POINTER; buflen: INTEGER; flags: INTEGER; expire_at: INTEGER_64): INTEGER
             -- Receive data from a socket
+            -- Parameters:
+            --   socket: mongoc_socket_t* - the socket to receive from
+            --   buf: void* - buffer to read into
+            --   buflen: size_t - number of bytes to receive
+            --   flags: int - flags for recv()
+            --   expire_at: int64_t - absolute timeout in microseconds (monotonic clock)
+            -- Returns: number of bytes received on success, -1 on failure and errno is set
+            -- Note: expire_at is an absolute timeout, add your desired timeout to current monotonic clock time
         external
             "C inline use <mongoc/mongoc.h>"
         alias
-            "return mongoc_socket_recv((mongoc_socket_t *)$socket, (void *)$buf, (size_t)$size, (int32_t)$timeout_msec);"
+            "[
+                return mongoc_socket_recv(
+                    (mongoc_socket_t *)$socket,
+                    (void *)$buf,
+                    (size_t)$buflen,
+                    (int)$flags,
+                    (int64_t)$expire_at
+                );
+            ]"
         end
 
     c_mongoc_socket_send (socket: POINTER; buf: POINTER; size: INTEGER; timeout_msec: INTEGER): INTEGER
