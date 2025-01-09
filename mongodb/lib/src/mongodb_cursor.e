@@ -55,8 +55,6 @@ feature -- Iterator
 
 			if {MONGODB_EXTERNALS}.c_mongo_cursor_next (item, $l_pointer) then
 				create Result.make_by_pointer (l_pointer)
-			else
-					-- cursor exhausted or error
 			end
 		end
 
@@ -70,7 +68,25 @@ feature -- Disponse
 			end
 		end
 
-feature {NONE} -- Measurement
+feature -- Status Report
+
+	cursor_error: detachable BSON_ERROR
+			-- Check if an error has occurred while iterating the cursor.
+			-- Returns: Void if no error has occurred, otherwise returns the error details.
+		note
+			EIS: "name=mongoc_cursor_error", "src=http://mongoc.org/libmongoc/current/mongoc_cursor_error.html", "protocol=uri"
+		require
+			is_usable: is_usable
+		local
+			l_error: BSON_ERROR
+		do
+			create l_error.make
+			if {MONGODB_EXTERNALS}.c_mongoc_cursor_error (item, l_error.item) then
+				Result := l_error
+			end
+		end
+
+feature -- Measurement
 
 	structure_size: INTEGER
 			-- Size to allocate (in bytes)
@@ -78,13 +94,13 @@ feature {NONE} -- Measurement
 			Result := struct_size
 		end
 
+feature {NONE} -- Implementation
 	struct_size: INTEGER
 		external
 			"C inline use <mongoc/mongoc.h>"
 		alias
 			"return sizeof(mongoc_cursor_t *);"
 		end
-
 
 	c_mongoc_cursor_destroy (a_cursor: POINTER)
 		external

@@ -34,9 +34,6 @@ feature {NONE}-- Initialization
 			-- Create a new client using `a_uri` provided
 		note
 			eis: "name=mongoc_client_new_from_uri ", "src=https://mongoc.org/libmongoc/current/mongoc_client_new_from_uri.html", "protocol=uri"
-		local
-			l_ptr: POINTER
-			l_error: BSON_ERROR
 		do
 			memory_make
 			mongoc_init
@@ -49,10 +46,22 @@ feature {NONE}-- Initialization
 			eis: "name=mongoc_client_new", "src=https://mongoc.org/libmongoc/current/mongoc_client_new.html", "protocol=uri"
 		local
 			c_string: C_STRING
+			l_ptr: POINTER
+			l_error: BSON_ERROR
 		do
 			create c_string.make (a_uri)
-			make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_new (c_string.item))
-			check success: item /= default_pointer end
+			l_ptr :={MONGODB_EXTERNALS}.c_mongoc_client_new (c_string.item)
+			if l_ptr.is_default_pointer then
+				create l_error.make
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
+					"Failed to create new MongoDB client with URI: " + a_uri.to_string_8
+				)
+				error := l_error
+			else
+				make_by_pointer (l_ptr)
+			end
 		end
 
 	new_from_uri_with_error (a_uri: MONGODB_URI)
@@ -80,7 +89,6 @@ feature {NONE} -- Init
 			{MONGODB_EXTERNALS}.c_mongoc_init
 		end
 
-
 feature -- Removal
 
 	dispose
@@ -97,7 +105,8 @@ feature -- Access
 			-- Fetches the mongoc_uri_t used to create the client.
 		note
 			EIS: "name=mongoc_client_get_uri", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_uri.html", "protocol=uri"
-
+		require
+			is_usable: is_usable
 		do
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_uri (item))
 		end
@@ -110,6 +119,8 @@ feature -- Access
 			--		There is no need to create a collection manually.
 		note
 			EIS: "name=mongoc_client_get_collection", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_collection.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_db: C_STRING
 			c_collection: C_STRING
@@ -118,6 +129,7 @@ feature -- Access
 			create c_db.make (a_db)
 			create c_collection.make (a_collection)
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_collection (item, c_db.item, c_collection.item)
+			check success: not l_ptr.is_default_pointer end
 			create Result.make_by_pointer (l_ptr)
 		end
 
@@ -128,12 +140,15 @@ feature -- Access
 				--		There is no need to create a database manually.
 		note
 			EIS: "name=API get_database", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_database.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_name: C_STRING
 			l_ptr: POINTER
 		do
 			create c_name.make (a_dbname)
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_database (item, c_name.item)
+			check success: not l_ptr.is_default_pointer end
 			create Result.make_by_pointer (l_ptr)
 		end
 
@@ -146,6 +161,8 @@ feature -- Access
 	        --   * Other options as specified in the listDatabases command
 	    note
 	        EIS: "name=mongoc_client_get_database_names_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_database_names_with_opts.html", "protocol=uri"
+	    require
+	    	is_usable: is_usable
 	    local
 	        l_error: BSON_ERROR
 	        l_ptr: POINTER
@@ -155,6 +172,8 @@ feature -- Access
 	        l_res: INTEGER
 	        l_cstring: C_STRING
 	    do
+	    		-- Clean last error.
+	    	clean_up
 	        if attached a_opts then
 	            l_opts := a_opts.item
 	        end
@@ -162,7 +181,7 @@ feature -- Access
 	        create l_res.default_create
 	        l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_database_names_with_opts (item, l_opts, l_error.item)
 
-	        if l_ptr = default_pointer then
+	        if l_ptr.is_default_pointer then
 	            error := l_error
 	            create {ARRAYED_LIST [STRING]} Result.make (0)
 	        else
@@ -191,6 +210,8 @@ feature -- Access
 			-- Useful when you want to choose which database to use based only on the URI in a configuration file.
 		note
 			EIS: "name=mongoc_client_get_default_database", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_default_database.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_ptr: POINTER
 		do
@@ -209,20 +230,21 @@ feature -- Access
 			--   * Other options as specified in the listDatabases command
 		note
 			EIS: "name=mongoc_client_find_databases_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_find_databases_with_opts.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_opts: POINTER
 			l_ptr: POINTER
-			l_error: BSON_ERROR
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_find_databases_with_opts (item, l_opts)
-			if l_ptr = default_pointer then
-					-- Handle error case
-				create Result.make_default
-			else
-				create Result.make (l_ptr)
+			check success: not l_ptr.is_default_pointer end
+			create Result.make (l_ptr)
+			if attached Result.cursor_error as l_error then
+				error := l_error
 			end
 		ensure
 			result_not_void: Result /= Void
@@ -233,6 +255,8 @@ feature -- Access
 				-- This Result should not be modified.
 		note
 			EIS: "name=mongoc_client_get_read_concern", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_read_concern.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_concern (item))
 		end
@@ -242,6 +266,8 @@ feature -- Access
 				-- This result should not be modified
 		note
 			EIS: "name=mongoc_client_get_read_prefs", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_read_prefs.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_prefs (item))
 		end
@@ -250,6 +276,8 @@ feature -- Access
             -- Get the write concern for this client
         note
         	eis: "name=mongoc_client_get_write_concern", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_write_concern.html", "protocol=uri"
+        require
+        	is_usable: is_usable
         do
             create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_write_concern (item))
         end
@@ -258,6 +286,8 @@ feature -- Access
 			-- Return an array of server descriptions or empty until the clients connects.
 		note
 			EIS: "name=mongoc_client_get_server_descriptions", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_server_descriptions.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_size: INTEGER_64
 			l_mgr: MANAGED_POINTER
@@ -282,6 +312,8 @@ feature -- Access
 			-- Returns Void if no crypt_shared library is loaded or auto-encryption is not loaded.
 		note
 			EIS: "name=mongoc_client_get_crypt_shared_version", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_crypt_shared_version.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_ptr: POINTER
 			l_c_string: C_STRING
@@ -305,11 +337,14 @@ feature -- Access
 			-- `a_opts': Optional parameters for the operation
 		note
 			EIS: "name=mongoc_client_get_handshake_description", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_handshake_description.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_error: BSON_ERROR
 			l_ptr: POINTER
 			l_opts: POINTER
 		do
+			clean_up
 			create l_error.make
 			if attached a_opts then
 				l_opts := a_opts.item
@@ -322,10 +357,9 @@ feature -- Access
 				l_error.item	-- error
 			)
 
-			if l_ptr = default_pointer then
+			if l_ptr.is_default_pointer then
 				error := l_error
 			else
-				error := Void
 				create Result.make_by_pointer (l_ptr)
 			end
 		ensure
@@ -342,11 +376,14 @@ feature -- Access
 			-- Returns: A server description that must be freed, or Void if no suitable server is found.
 		note
 			 EIS: "name=mongoc_client_select_server", "src=https://mongoc.org/libmongoc/current/mongoc_client_select_server.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_prefs: POINTER
 			l_error: BSON_ERROR
 			l_ptr: POINTER
 		do
+			clean_up
 			if attached prefs then
 				l_prefs := prefs.item
 			end
@@ -359,10 +396,9 @@ feature -- Access
 				l_error.item -- error
 			)
 
-			if l_ptr = default_pointer then
+			if l_ptr.is_default_pointer then
 				create error.make_by_pointer (l_error.item)
 			else
-				error := Void
 				create Result.make_by_pointer (l_ptr)
 			end
 		ensure
@@ -375,32 +411,8 @@ feature -- Access
 
 feature -- Status
 
-	server_status (a_read_prefs: detachable MONGODB_READ_PREFERENCE): BSON
-			-- query the current server status, return a bson document.
-		obsolete
-			"Deprecated since version 1.10.0: Run the serverStatus command directly with read_command_with_opts() instead."
-		local
-			l_res: BOOLEAN
-			l_reply: BSON
-			l_error: BSON_ERROR
-			l_prefs: POINTER
-		do
-			if attached a_read_prefs then
-				l_prefs := a_read_prefs.item
-			end
-			create l_reply.make
-			create l_error.make
-			l_res :={MONGODB_EXTERNALS}.c_mongoc_client_get_server_status (item, l_prefs, l_reply.item, l_error.item)
-			Result := l_reply
-			if l_res then
-				error := l_error
-			else
-				error := Void
-			end
-		end
-
 	read_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE;
-							a_opts: detachable BSON; a_reply: BSON; ): BOOLEAN
+							a_opts: detachable BSON; a_reply: BSON; )
 			-- Execute a command on the server, applying logic specific to read commands.
 			-- This is a retryable read operation that will be retried once upon transient errors.
 			-- `a_db_name': The name of the database to run the command on.
@@ -414,12 +426,16 @@ feature -- Status
 			-- `a_reply': Location for the resulting document.
 		note
 			EIS: "name=mongoc_client_read_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_read_command_with_opts.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
 			l_opts: POINTER
 			l_error: BSON_ERROR
+			l_res: BOOLEAN
 		do
+			clean_up
 			create c_db.make (a_db_name)
 			if attached a_read_prefs then
 				l_read_prefs := a_read_prefs.item
@@ -429,20 +445,18 @@ feature -- Status
 			end
 			create l_error.make
 
-			Result := {MONGODB_EXTERNALS}.c_mongoc_client_read_command_with_opts (
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_read_command_with_opts (
 				item,           -- client
 				c_db.item,     	-- db_name
 				a_command.item, -- command
 				l_read_prefs,   -- read_prefs
 				l_opts,         -- opts
 				a_reply.item,   -- reply
-				l_error.item        	-- error
+				l_error.item    -- error
 			)
 
-			if not Result then
+			if not l_Res then
 				create error.make_by_pointer (l_error.item)
-			else
-				error := Void
 			end
 		ensure
 			error_status_set: has_error implies error /= Void
@@ -463,9 +477,10 @@ feature -- Status
 			--   * collation: Text comparison options
 			--   * serverId: To target a specific server
 			-- `a_reply': Location for the resulting document.
-			-- `a_error': Optional location for error information.
 		note
 			EIS: "name=mongoc_client_read_write_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_read_write_command_with_opts.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
@@ -473,6 +488,7 @@ feature -- Status
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			create c_db.make (a_db_name)
 			if attached a_read_prefs then
 				l_read_prefs := a_read_prefs.item
@@ -494,8 +510,6 @@ feature -- Status
 
 			if not l_res then
 				create error.make_by_pointer (l_error.item)
-			else
-				error := Void
 			end
 		ensure
 			error_status_set: has_error implies error /= Void
@@ -509,11 +523,23 @@ feature -- Error
 		note
 			EIS: "name=mongoc_client_set_error_api", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_error_api.html", "protocol=uri"
 		require
+			is_usable: is_usable
 			valid_version: a_version = {MONGODB_EXTERNALS}.mongoc_error_api_version_2 or else a_version = {MONGODB_EXTERNALS}.mongoc_error_api_version_legacy
 		local
 			l_res: BOOLEAN
+			l_error: BSON_ERROR
 		do
+			clean_up
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_set_error_api (item, a_version)
+			if not l_res then
+				create l_error.make
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
+					"Failed to set error API version to: " + a_version.out
+				)
+				error := l_error
+			end
 		end
 
 feature -- Change Element
@@ -523,6 +549,8 @@ feature -- Change Element
 			-- It is a programming error to call this function on a client from a mongoc_client_pool_t. For pooled clients, set the read concern with the MongoDB URI instead.
 		note
 			EIS: "name=mongoc_client_set_read_concern", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_read_concern.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_concern (item, a_read_concern.item)
 		end
@@ -533,6 +561,8 @@ feature -- Change Element
 			-- The global default is to read from the replica set primary.
 		note
 			EIS: "name=mongoc_client_set_read_prefs ", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_read_prefs.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_prefs (item, a_read_pref.item)
 		end
@@ -544,16 +574,24 @@ feature -- Change Element
 		note
 			EIS: "name=mongoc_client_set_appname", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_appname.html", "protocol=uri"
 		require
+			is_usable: is_usable
 			is_valid_length: a_name.count <= {MONGODB_EXTERNALS}.MONGOC_HANDSHAKE_APPNAME_MAX
 		local
 			c_name: C_STRING
 			l_res: BOOLEAN
+			l_error: BSON_ERROR
 		do
+			clean_up
 			create c_name.make (a_name)
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_set_appname (item, c_name.item)
 			if not l_res then
-					-- TODO improve error handling
-				create error.make
+				create l_error.make
+				l_error.set_error (
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
+					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
+					"Failed to set appname to: " + a_name.out
+				)
+				error := l_error
 			end
 		end
 
@@ -561,6 +599,8 @@ feature -- Change Element
 			-- Set the write concern for this client
 		note
 			eis: "name=", "src=https://mongoc.org/libmongoc/current/mongoc_client_set_write_concern.html", "protocl=uri"
+		require
+			is_usable: is_usable
 		do
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_write_concern (item, a_write_concern.item)
 		end
@@ -574,6 +614,8 @@ feature -- Change Element
 			-- * Invalidates client sessions from previous generations
 		note
 			 EIS: "name=mongoc_client_reset", "src=http://mongoc.org/libmongoc/current/mongoc_client_reset.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			{MONGODB_EXTERNALS}.c_mongoc_client_reset (item)
 		end
@@ -582,23 +624,23 @@ feature -- Change Element
 			-- Set the API version to use for this client.
 			-- Note: Once the API version is set, it cannot be changed to a new value.
 			-- Returns: True if the API version was successfully set, False otherwise.
+		note
+			eis: "name=", "src=https://mongoc.org/libmongoc/current/mongoc_client_set_server_api.html", "protocl=uri"
 		require
-			api_not_void: a_api /= Void
+			is_usable: is_usable
 		local
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_set_server_api (
 				item,        -- client
 				a_api.item,  -- api
 				l_error.item -- error
 			)
-
 			if not l_res then
 				create error.make_by_pointer (l_error.item)
-			else
-				error := Void
 			end
 		end
 
@@ -609,6 +651,8 @@ feature -- Change Element
 			-- `a_timeout_ms': The requested timeout value in milliseconds.
 		note
 			eis: "name=mongoc_client_set_sockettimeoutms", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_sockettimeoutms.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		do
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_sockettimeoutms (item, a_timeout_ms)
 		end
@@ -617,10 +661,13 @@ feature -- Command
 
     ping (a_db: READABLE_STRING_GENERAL): BOOLEAN
             -- Test if server is responsive
+        require
+        	is_usable: is_usable
         local
             l_command: BSON
             l_reply: BSON
         do
+        	clean_up
             create l_command.make_from_json ("{ping: 1}")
             create l_reply.make
             command_simple (a_db, l_command, Void, l_reply)
@@ -636,12 +683,15 @@ feature -- Command
 			-- 'reply': A location for the resulting document.
 		note
 			EIS: "name=mongoc_client_command_simple", "src=http://mongoc.org/libmongoc/current/mongoc_client_command_simple.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_db: C_STRING
 			l_res: BOOLEAN
 			l_read_prefs:  POINTER
 			l_error: BSON
 		do
+			clean_up
 			create c_db.make (a_db)
 
 			if attached a_read_prefs then
@@ -666,6 +716,8 @@ feature -- Command
 			-- 'a_error': An optional location for a bson_error_t or NULL.	
 		note
 			EIS: "name=mongoc_client_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_command_with_opts.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
@@ -673,6 +725,7 @@ feature -- Command
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			create c_db.make (a_db_name)
 			if attached a_read_prefs then
 				l_read_prefs := a_read_prefs.item
@@ -689,19 +742,36 @@ feature -- Command
 
 feature -- Session
 
-	start_session (a_opts: detachable MONGODB_SESSION_OPT): MONGODB_CLIENT_SESSION
+	start_session (a_opts: detachable MONGODB_SESSION_OPT): detachable MONGODB_CLIENT_SESSION
+			-- Create a session for a sequence of operations.
+			-- By default, sessions are causally consistent.
+			-- Unacknowledged writes are prohibited with sessions.
+			-- A session must be used by only one thread at a time.
+			-- Note: Due to session pooling, this may return a session that has been idle
+			-- for some time and is about to be closed after its idle timeout.
+			-- Use the session within one minute of acquiring it to refresh the session and avoid a timeout.
+			-- `a_opts': Optional session options.
+			-- `Result': If successful, returns a newly allocated client session that should be freed when no longer in use.
+		note
+			EIS: "name=mongoc_client_start_session", "src=https://mongoc.org/libmongoc/current/mongoc_client_start_session.html", "protocol=uri"
+		require
+			is_usable: is_usable
 		local
 			l_opts: POINTER
 			l_error: BSON
 			l_ptr: POINTER
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
 			create l_error.make
-			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_start_session (item, l_opts, l_error.item )
-				-- TODO check if there was an error. check l_error.
-			create Result.make_by_pointer (l_ptr)
+			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_start_session (item, l_opts, l_error.item)
+			if l_ptr.is_default_pointer then
+				create error.make_by_pointer (l_error.item)
+			else
+				create Result.make_by_pointer (l_ptr)
+			end
 		end
 
 
@@ -718,12 +788,15 @@ feature -- Handshake
             -- Returns: True if the handshake data was successfully appended
         note
             eis: "name=mongoc_handshake_data_append", "src=http://mongoc.org/libmongoc/current/mongoc_handshake_data_append.html", "protocol=uri"
+        require
+        	is_usable: is_usable
         local
             l_driver_name, l_driver_version, l_platform: C_STRING
             l_driver_name_ptr, l_driver_version_ptr, l_platform_ptr: POINTER
             l_res: BOOLEAN
             l_error: BSON_ERROR
         do
+        	clean_up
             if attached a_driver_name then
                 create l_driver_name.make (a_driver_name)
                 l_driver_name_ptr := l_driver_name.item
@@ -752,13 +825,15 @@ feature -- Handshake
         end
 
 
-feature {NONE} -- Measurement
+feature -- Measurement
 
 	structure_size: INTEGER
 			-- Size to allocate (in bytes)
 		do
 			Result := struct_size
 		end
+
+feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external

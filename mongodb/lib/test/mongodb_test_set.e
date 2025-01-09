@@ -15,10 +15,15 @@ inherit
 
 feature -- Test routines
 
-	new_test_routine
+	test_default_cursor
 			-- New test routine
+		local
+			l_cursor: MONGODB_CURSOR
+			l_error: BSON_ERROR
 		do
-			assert ("not_implemented", False)
+			create l_cursor.make_default
+			l_error := l_cursor.cursor_error
+			assert ("Expected error", l_error /= Void)
 		end
 
 end

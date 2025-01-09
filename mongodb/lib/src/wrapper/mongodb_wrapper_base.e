@@ -42,4 +42,14 @@ feature -- Error
 			error := Void
 		end
 
+
+feature -- Status Report
+
+	is_usable: BOOLEAN
+			-- Is the API usable.
+		do
+			Result := not item.is_default_pointer 
+		end
+
+
 end

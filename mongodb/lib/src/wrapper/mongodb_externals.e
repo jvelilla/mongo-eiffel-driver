@@ -1008,6 +1008,17 @@ feature -- Cursor
 			]"
 		end
 
+	c_mongoc_cursor_error (a_cursor: POINTER; a_error: POINTER): BOOLEAN
+			-- Check if an error has occurred while iterating the cursor
+			-- Parameters:
+			--   a_cursor: mongoc_cursor_t* - The cursor instance
+			--   a_error: bson_error_t* - Optional error location
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_cursor_error((mongoc_cursor_t *)$a_cursor, (bson_error_t *)$a_error);"
+		end
+
 feature -- URI
 
 	c_mongoc_uri_new (a_uri: POINTER): POINTER
