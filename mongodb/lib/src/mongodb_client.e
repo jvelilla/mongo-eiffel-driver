@@ -106,7 +106,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_uri", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_uri.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_uri (item))
@@ -121,7 +121,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_collection", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_collection.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_db: C_STRING
 			c_collection: C_STRING
@@ -143,7 +143,7 @@ feature -- Access
 		note
 			EIS: "name=API get_database", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_database.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_name: C_STRING
 			l_ptr: POINTER
@@ -165,7 +165,7 @@ feature -- Access
 	    note
 	        EIS: "name=mongoc_client_get_database_names_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_database_names_with_opts.html", "protocol=uri"
 	    require
-	    	is_usable: is_usable
+	    	is_usable: exists
 	    local
 	        l_error: BSON_ERROR
 	        l_ptr: POINTER
@@ -210,7 +210,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_default_database", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_default_database.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_ptr: POINTER
 		do
@@ -231,7 +231,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_find_databases_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_find_databases_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_opts: POINTER
 			l_ptr: POINTER
@@ -254,7 +254,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_read_concern", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_read_concern.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_concern (item))
 		end
@@ -265,7 +265,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_read_prefs", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_read_prefs.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_prefs (item))
@@ -276,7 +276,7 @@ feature -- Access
         note
         	eis: "name=mongoc_client_get_write_concern", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_write_concern.html", "protocol=uri"
         require
-        	is_usable: is_usable
+        	is_usable: exists
         do
         	clean_up
             create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_write_concern (item))
@@ -287,7 +287,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_server_descriptions", "src=https://mongoc.org/libmongoc/current/mongoc_client_get_server_descriptions.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_size: INTEGER_64
 			l_mgr: MANAGED_POINTER
@@ -314,7 +314,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_crypt_shared_version", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_crypt_shared_version.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_ptr: POINTER
 			l_c_string: C_STRING
@@ -338,7 +338,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_client_get_handshake_description", "src=http://mongoc.org/libmongoc/current/mongoc_client_get_handshake_description.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 			l_ptr: POINTER
@@ -373,7 +373,7 @@ feature -- Access
 		note
 			 EIS: "name=mongoc_client_select_server", "src=https://mongoc.org/libmongoc/current/mongoc_client_select_server.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_prefs: POINTER
 			l_error: BSON_ERROR
@@ -418,7 +418,7 @@ feature -- Status
 		note
 			EIS: "name=mongoc_client_read_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_read_command_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
@@ -468,7 +468,7 @@ feature -- Status
 		note
 			EIS: "name=mongoc_client_read_write_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_read_write_command_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
@@ -509,7 +509,7 @@ feature -- Error
 		note
 			EIS: "name=mongoc_client_set_error_api", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_error_api.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 			valid_version: a_version = {MONGODB_EXTERNALS}.mongoc_error_api_version_2 or else a_version = {MONGODB_EXTERNALS}.mongoc_error_api_version_legacy
 		local
 			l_res: BOOLEAN
@@ -536,7 +536,7 @@ feature -- Change Element
 		note
 			EIS: "name=mongoc_client_set_read_concern", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_read_concern.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_concern (item, a_read_concern.item)
@@ -549,7 +549,7 @@ feature -- Change Element
 		note
 			EIS: "name=mongoc_client_set_read_prefs ", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_read_prefs.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_prefs (item, a_read_pref.item)
@@ -562,7 +562,7 @@ feature -- Change Element
 		note
 			EIS: "name=mongoc_client_set_appname", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_appname.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 			is_valid_length: a_name.count <= {MONGODB_EXTERNALS}.MONGOC_HANDSHAKE_APPNAME_MAX
 		local
 			c_name: C_STRING
@@ -588,7 +588,7 @@ feature -- Change Element
 		note
 			eis: "name=", "src=https://mongoc.org/libmongoc/current/mongoc_client_set_write_concern.html", "protocl=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_write_concern (item, a_write_concern.item)
@@ -604,7 +604,7 @@ feature -- Change Element
 		note
 			 EIS: "name=mongoc_client_reset", "src=http://mongoc.org/libmongoc/current/mongoc_client_reset.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_reset (item)
@@ -617,7 +617,7 @@ feature -- Change Element
 		note
 			eis: "name=", "src=https://mongoc.org/libmongoc/current/mongoc_client_set_server_api.html", "protocl=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
@@ -642,7 +642,7 @@ feature -- Change Element
 		note
 			eis: "name=mongoc_client_set_sockettimeoutms", "src=http://mongoc.org/libmongoc/current/mongoc_client_set_sockettimeoutms.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_sockettimeoutms (item, a_timeout_ms)
@@ -653,7 +653,7 @@ feature -- Command
     ping (a_db: READABLE_STRING_GENERAL): BOOLEAN
             -- Test if server is responsive
         require
-        	is_usable: is_usable
+        	is_usable: exists
         local
             l_command: BSON
             l_reply: BSON
@@ -675,7 +675,7 @@ feature -- Command
 		note
 			EIS: "name=mongoc_client_command_simple", "src=http://mongoc.org/libmongoc/current/mongoc_client_command_simple.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_db: C_STRING
 			l_res: BOOLEAN
@@ -708,7 +708,7 @@ feature -- Command
 		note
 			EIS: "name=mongoc_client_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_command_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_db: C_STRING
 			l_read_prefs: POINTER
@@ -746,7 +746,7 @@ feature -- Session
 		note
 			EIS: "name=mongoc_client_start_session", "src=https://mongoc.org/libmongoc/current/mongoc_client_start_session.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_opts: POINTER
 			l_error: BSON
@@ -780,7 +780,7 @@ feature -- Handshake
         note
             eis: "name=mongoc_handshake_data_append", "src=http://mongoc.org/libmongoc/current/mongoc_handshake_data_append.html", "protocol=uri"
         require
-        	is_usable: is_usable
+        	is_usable: exists
         local
             l_driver_name, l_driver_version, l_platform: C_STRING
             l_driver_name_ptr, l_driver_version_ptr, l_platform_ptr: POINTER

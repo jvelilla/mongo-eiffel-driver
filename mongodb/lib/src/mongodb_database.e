@@ -27,7 +27,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_database_get_collection_names_with_opts  ", "src=http://mongoc.org/libmongoc/current/mongoc_database_get_collection_names_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 			l_ptr: POINTER
@@ -64,7 +64,7 @@ feature -- Access
 		note
 			EIS: "name=", "src=http://mongoc.org/libmongoc/current/mongoc_database_get_collection.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_name: C_STRING
 		do
@@ -78,7 +78,7 @@ feature -- Access
 		note
 			EIS: "name=mongoc_database_get_name", "src=http://mongoc.org/libmongoc/current/mongoc_database_get_name.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			c_string: C_STRING
 		do
@@ -99,7 +99,7 @@ feature -- Access
 		note
 			eis: "name=mongoc_database_find_collections_with_opts", "src=https://mongoc.org/libmongoc/current/mongoc_database_find_collections_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_opts: POINTER
 			l_cursor: POINTER
@@ -112,9 +112,6 @@ feature -- Access
 
 			l_cursor := {MONGODB_EXTERNALS}.c_mongoc_database_find_collections_with_opts (item, l_opts)
 			create Result.make (l_cursor)
-		ensure
-			result_not_void: Result /= Void
-			result_usable: Result.is_usable
 		end
 
 	read_concern: MONGODB_READ_CONCERN
@@ -123,7 +120,7 @@ feature -- Access
 		note
 			eis: "name=mongoc_database_get_read_concern", "src=https://mongoc.org/libmongoc/current/mongoc_database_get_read_concern.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_database_get_read_concern (item))
@@ -135,7 +132,7 @@ feature -- Access
 		note
 			eis: "name=mongoc_database_get_read_prefs", "src=https://mongoc.org/libmongoc/current/mongoc_database_get_read_prefs.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_database_get_read_prefs (item))
@@ -147,7 +144,7 @@ feature -- Access
 		note
 			eis: "name=mongoc_database_get_write_concern", "src=https://mongoc.org/libmongoc/current/mongoc_database_get_write_concern.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		do
 			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_database_get_write_concern (item))
@@ -167,7 +164,7 @@ feature -- Change Element
         note
         	eis: "name=mongoc_database_add_user", "src=https://mongoc.org/libmongoc/current/mongoc_database_add_user.html", "protocol=uri"
         require
-       		is_usable: is_usable
+       		is_usable: exists
         local
             c_string_username: C_STRING
             c_string_password: C_STRING
@@ -208,7 +205,7 @@ feature -- Drop
 		note
 			EIS: "name=mongoc_database_drop_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_database_drop_with_opts.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 			l_opts: POINTER
@@ -232,7 +229,7 @@ feature -- Status Report
 		note
 			EIS: "name=mongoc_database_has_collection", "src=http://mongoc.org/libmongoc/current/mongoc_database_has_collection.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 			l_name: C_STRING
@@ -260,7 +257,7 @@ feature -- Collection
         note
             eis: "name=mongoc_database_create_collection", "src=https://mongoc.org/libmongoc/current/mongoc_database_create_collection.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
             name_not_empty: not a_name.is_empty
         local
             l_opts: POINTER
@@ -289,9 +286,6 @@ feature -- Collection
             else
                 create Result.make_by_pointer (l_collection)
             end
-        ensure
-            collection_created: not has_error and then attached Result implies Result.is_usable
-            error_status_set: has_error implies error /= Void
         end
 
 feature -- Operations
@@ -309,7 +303,7 @@ feature -- Operations
         note
             eis: "name=mongoc_database_aggregate", "src=https://mongoc.org/libmongoc/current/mongoc_database_aggregate.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
         local
             l_opts: POINTER
             l_read_prefs: POINTER
@@ -344,7 +338,7 @@ feature -- Operations
         note
             eis: "name=mongoc_database_command_simple", "src=https://mongoc.org/libmongoc/current/mongoc_database_command_simple.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
         local
             l_read_prefs: POINTER
             l_error: BSON_ERROR
@@ -380,7 +374,7 @@ feature -- Operations
         note
             eis: "name=mongoc_database_command_with_opts", "src=https://mongoc.org/libmongoc/current/mongoc_database_command_with_opts.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
         local
             l_read_prefs: POINTER
             l_opts: POINTER
@@ -426,7 +420,7 @@ feature -- Operations
         note
             eis: "name=mongoc_database_read_command_with_opts", "src=https://mongoc.org/libmongoc/current/mongoc_database_read_command_with_opts.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
         local
             l_error: BSON_ERROR
             l_read_prefs_ptr: POINTER
@@ -461,7 +455,7 @@ feature -- Duplication
         note
             eis: "name=mongoc_database_copy", "src=https://mongoc.org/libmongoc/current/mongoc_database_copy.html", "protocol=uri"
         require
-            is_usable: is_usable
+            is_usable: exists
         do
         	clean_up
             create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_database_copy (item))

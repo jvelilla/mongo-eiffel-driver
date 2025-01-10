@@ -40,7 +40,6 @@ feature -- Creation
 			make_by_pointer (a_pointer)
 		end
 
-
 feature -- Iterator
 
 	next: detachable BSON
@@ -49,6 +48,8 @@ feature -- Iterator
 			--| Errors can be determined with the mongoc_cursor_error() function.		
 		note
 			EIS: "name=mongoc_cursor_next", "src=http://mongoc.org/libmongoc/current/mongoc_cursor_next.html", "protocol=uri"
+		require
+			is_usable: exists
 		local
 			l_pointer: POINTER
 		do
@@ -76,7 +77,7 @@ feature -- Status Report
 		note
 			EIS: "name=mongoc_cursor_error", "src=http://mongoc.org/libmongoc/current/mongoc_cursor_error.html", "protocol=uri"
 		require
-			is_usable: is_usable
+			is_usable: exists
 		local
 			l_error: BSON_ERROR
 		do
@@ -95,6 +96,7 @@ feature -- Measurement
 		end
 
 feature {NONE} -- Implementation
+
 	struct_size: INTEGER
 		external
 			"C inline use <mongoc/mongoc.h>"
