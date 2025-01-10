@@ -897,7 +897,7 @@ feature -- Mongo Database
 			]"
 		end
 
-	c_mongoc_database_add_user (a_database: POINTER; a_username: POINTER; a_password: POINTER; 
+	c_mongoc_database_add_user (a_database: POINTER; a_username: POINTER; a_password: POINTER;
                                a_roles: POINTER; a_custom_data: POINTER; a_error: POINTER): BOOLEAN
             -- Create a new user with access to database
             -- Parameters:
@@ -922,7 +922,7 @@ feature -- Mongo Database
             ]"
         end
 
-    c_mongoc_database_aggregate (a_database: POINTER; a_pipeline: POINTER; 
+    c_mongoc_database_aggregate (a_database: POINTER; a_pipeline: POINTER;
                                a_opts: POINTER; a_read_prefs: POINTER): POINTER
             -- Execute an aggregation pipeline on a database
             -- Parameters:
@@ -945,7 +945,7 @@ feature -- Mongo Database
             ]"
         end
 
-    c_mongoc_database_command_simple (a_database: POINTER; a_command: POINTER; 
+    c_mongoc_database_command_simple (a_database: POINTER; a_command: POINTER;
                                     a_read_prefs: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
             -- Execute a command on the database with a simplified interface.
             -- Parameters:
@@ -970,8 +970,8 @@ feature -- Mongo Database
             ]"
         end
 
-    c_mongoc_database_command_with_opts (a_database: POINTER; a_command: POINTER; 
-                                       a_read_prefs: POINTER; a_opts: POINTER; 
+    c_mongoc_database_command_with_opts (a_database: POINTER; a_command: POINTER;
+                                       a_read_prefs: POINTER; a_opts: POINTER;
                                        a_reply: POINTER; a_error: POINTER): BOOLEAN
             -- Execute a command on the server, interpreting opts according to MongoDB server version.
             -- Parameters:
@@ -1060,8 +1060,8 @@ feature -- Mongo Database
             "return mongoc_database_get_write_concern((const mongoc_database_t *)$a_database);"
         end
 
-    c_mongoc_database_read_command_with_opts (a_database: POINTER; a_command: POINTER; 
-                                            a_read_prefs: POINTER; a_opts: POINTER; 
+    c_mongoc_database_read_command_with_opts (a_database: POINTER; a_command: POINTER;
+                                            a_read_prefs: POINTER; a_opts: POINTER;
                                             a_reply: POINTER; a_error: POINTER): BOOLEAN
             -- Execute a command on the server, applying logic specific to read commands
             -- Parameters:
@@ -1079,6 +1079,116 @@ feature -- Mongo Database
                     (mongoc_database_t *)$a_database,
                     (const bson_t *)$a_command,
                     (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+    c_mongoc_database_read_write_command_with_opts (a_database: POINTER; a_command: POINTER;
+                                                  a_read_prefs: POINTER; a_opts: POINTER;
+                                                  a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic for commands that both read and write
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_command: const bson_t* - The command to execute
+            --   a_read_prefs: const mongoc_read_prefs_t* - Ignored (included by mistake in libmongoc 1.5)
+            --   a_opts: const bson_t* - Optional additional options
+            --   a_reply: bson_t* - Storage for the command's result
+            --   a_error: bson_error_t* - Optional error information
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_read_write_command_with_opts(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+
+ 	c_mongoc_database_remove_all_users (a_database: POINTER; a_error: POINTER): BOOLEAN
+            -- Remove all users configured to access the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_error: bson_error_t* - Optional error information
+            -- Returns: true if successful, false and sets error if there are invalid arguments or a server error
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_remove_all_users((mongoc_database_t *)$a_database, (bson_error_t *)$a_error);"
+        end
+
+    c_mongoc_database_set_read_concern (a_database: POINTER; a_read_concern: POINTER)
+            -- Set the read concern for the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_read_concern: const mongoc_read_concern_t* - The read concern to set
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_database_set_read_concern((mongoc_database_t *)$a_database, (const mongoc_read_concern_t *)$a_read_concern);"
+        end
+
+    c_mongoc_database_remove_user (a_database: POINTER; a_username: POINTER; a_error: POINTER): BOOLEAN
+            -- Remove a specific user from the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_username: const char* - The username to remove
+            --   a_error: bson_error_t* - Optional error information
+            -- Returns: true if successful, false and sets error if there are invalid arguments or a server error
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_remove_user((mongoc_database_t *)$a_database, (const char *)$a_username, (bson_error_t *)$a_error);"
+        end
+
+    c_mongoc_database_set_write_concern (a_database: POINTER; a_write_concern: POINTER)
+            -- Set the write concern for the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_write_concern: const mongoc_write_concern_t* - The write concern to set
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "mongoc_database_set_write_concern((mongoc_database_t *)$a_database, (const mongoc_write_concern_t *)$a_write_concern);"
+        end
+
+
+    c_mongoc_database_watch (a_database: POINTER; a_pipeline: POINTER; a_opts: POINTER): POINTER
+            -- Create a change stream for watching changes in a database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database to watch
+            --   a_pipeline: const bson_t* - Optional aggregation pipeline
+            --   a_opts: const bson_t* - Optional change stream options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_watch((mongoc_database_t *)$a_database, (const bson_t *)$a_pipeline, (const bson_t *)$a_opts);"
+        end
+
+    c_mongoc_database_write_command_with_opts (a_database: POINTER; a_command: POINTER;
+                                           a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic specific to write commands
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_command: const bson_t* - The command to execute
+            --   a_opts: const bson_t* - Optional additional options
+            --   a_reply: bson_t* - Storage for the command's result
+            --   a_error: bson_error_t* - Optional error information
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_write_command_with_opts(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_command,
                     (const bson_t *)$a_opts,
                     (bson_t *)$a_reply,
                     (bson_error_t *)$a_error
@@ -2365,6 +2475,30 @@ feature -- Socket
             "C inline use <mongoc/mongoc.h>"
         alias
             "return mongoc_socket_setsockopt((mongoc_socket_t *)$socket, (int)$level, (int)$optname, (const void *)$optval, (mongoc_socklen_t)$optlen);"
+        end
+
+
+ feature -- Change Stream
+
+    c_mongoc_change_stream_next (a_stream: POINTER; a_bson: POINTER): BOOLEAN
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_change_stream_next ((mongoc_change_stream_t *)$a_stream, (const bson_t **)$a_bson);"
+        end
+
+    c_mongoc_change_stream_get_resume_token (a_stream: POINTER): POINTER
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return (EIF_POINTER) mongoc_change_stream_get_resume_token ((mongoc_change_stream_t *)$a_stream);"
+        end
+
+    c_mongoc_change_stream_error_document (a_stream: POINTER; a_error: POINTER; a_error_doc: POINTER): BOOLEAN
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_change_stream_error_document ((mongoc_change_stream_t *)$a_stream, (bson_error_t *)$a_error, (const bson_t **)$a_error_doc);"
         end
 
 end

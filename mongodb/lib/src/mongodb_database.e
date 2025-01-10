@@ -7,6 +7,7 @@ note
 	date: "$Date$"
 	revision: "$Revision$"
 	EIS: "name=Mongo Database ", "src=http://mongoc.org/libmongoc/current/mongoc_database_t.html", "protocol=uri"
+	
 class
 	MONGODB_DATABASE
 
@@ -197,6 +198,53 @@ feature -- Change Element
            end
        end
 
+    remove_all_users
+            -- Remove all users configured to access this database
+            -- Note: This may fail if there are socket errors or the current user
+            --       is not authorized to perform the given command
+        note
+            eis: "name=mongoc_database_remove_all_users", "src=https://mongoc.org/libmongoc/current/mongoc_database_remove_all_users.html", "protocol=uri"
+        require
+            is_usable: exists
+        local
+            l_error: BSON_ERROR
+            l_success: BOOLEAN
+        do
+            clean_up
+            create l_error.make
+            l_success := {MONGODB_EXTERNALS}.c_mongoc_database_remove_all_users (item, l_error.item)
+
+            if not l_success then
+                error := l_error
+            end
+        end
+
+    remove_user (a_username: READABLE_STRING_GENERAL)
+            -- Remove the specified user from this database
+            -- Note: This may fail if there are socket errors or the current user
+            --       is not authorized to perform the command
+        note
+            eis: "name=mongoc_database_remove_user", "src=https://mongoc.org/libmongoc/current/mongoc_database_remove_user.html", "protocol=uri"
+        require
+            is_usable: exists
+            username_not_empty: not a_username.is_empty
+        local
+            l_error: BSON_ERROR
+            l_success: BOOLEAN
+            l_c_username: C_STRING
+        do
+            clean_up
+            create l_error.make
+            create l_c_username.make (a_username)
+
+            l_success := {MONGODB_EXTERNALS}.c_mongoc_database_remove_user (
+                item, l_c_username.item, l_error.item)
+
+            if not l_success then
+                error := l_error
+            end
+        end
+
 
 feature -- Drop
 
@@ -243,6 +291,38 @@ feature -- Status Report
 				error := l_error
 			end
 		end
+
+
+feature -- Settings
+
+    set_read_concern (a_read_concern: MONGODB_READ_CONCERN)
+            -- Set the read concern for this database.
+            -- Note: Collections created after this call will inherit this read concern.
+            -- Note: The default read concern is empty: no readConcern is sent to
+            --       the server unless explicitly configured.
+        note
+            eis: "name=mongoc_database_set_read_concern", "src=https://mongoc.org/libmongoc/current/mongoc_database_set_read_concern.html", "protocol=uri"
+        require
+            is_usable: exists
+        do
+            clean_up
+            {MONGODB_EXTERNALS}.c_mongoc_database_set_read_concern (item, a_read_concern.item)
+        end
+
+    set_write_concern (a_write_concern: MONGODB_WRITE_CONCERN)
+            -- Set the write concern for this database.
+            -- Note: Collections created after this call will inherit this write concern.
+            -- Note: The default write concern is MONGOC_WRITE_CONCERN_W_DEFAULT: the driver
+            --       blocks awaiting basic acknowledgement of write operations from MongoDB.
+            --       This is the correct write concern for the great majority of applications.
+        note
+            eis: "name=mongoc_database_set_write_concern", "src=https://mongoc.org/libmongoc/current/mongoc_database_set_write_concern.html", "protocol=uri"
+        require
+            is_usable: exists
+        do
+            clean_up
+            {MONGODB_EXTERNALS}.c_mongoc_database_set_write_concern (item, a_write_concern.item)
+        end
 
 feature -- Collection
 
@@ -446,6 +526,128 @@ feature -- Operations
             end
         end
 
+
+   read_write_command_with_opts (a_command: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
+            -- Execute a command on the server, applying logic for commands that both read and write.
+            -- Parameters:
+            --   a_command: The command to execute
+            --   a_opts: Optional additional options. May include:
+            --     * readConcern: Configure read concern
+            --     * writeConcern: Configure write concern
+            --     * sessionId: For use within a session
+            --     * collation: Configure textual comparisons
+            --     * serverId: To target a specific server
+            -- Note: In a transaction, read concern and write concern are prohibited in opts
+            -- Note: The read preferences parameter is ignored in the underlying implementation
+        note
+            eis: "name=mongoc_database_read_write_command_with_opts", "src=https://mongoc.org/libmongoc/current/mongoc_database_read_write_command_with_opts.html", "protocol=uri"
+        require
+            is_usable: exists
+        local
+            l_reply: POINTER
+            l_error: BSON_ERROR
+            l_opts_ptr: POINTER
+            l_success: BOOLEAN
+        do
+            clean_up
+
+            if attached a_opts then
+                l_opts_ptr := a_opts.item
+            end
+
+            if attached a_reply then
+            	l_reply := a_reply.item
+            end
+
+            create l_error.make
+            l_success := {MONGODB_EXTERNALS}.c_mongoc_database_read_write_command_with_opts (
+                		               	item,				-- database
+                		               	a_command.item,     -- command
+                		               	default_pointer, 	-- read_prefs
+                		               	l_opts_ptr, 		-- opts
+                		               	l_reply.item,  		-- reply
+                		               	l_error.item)		-- error
+
+            if not l_success then
+                error := l_error
+            end
+        end
+
+    watch (a_pipeline: BSON; a_opts: detachable BSON): MONGODB_CHANGE_STREAM
+            -- Create a change stream to watch for changes in this database.
+            -- Parameters:
+            --   a_pipeline: representing an aggregation pipeline appended to the change stream. This may be an empty document.
+            --   a_opts: Optional settings, which may include:
+            --     * batchSize: Number of documents per batch
+            --     * resumeAfter: Resume token for continuing from a previous change stream
+            --     * startAfter: Resume token that can follow an "invalidate" event
+            --     * startAtOperationTime: Timestamp to start watching from
+            --     * maxAwaitTimeMS: Max time to wait for new data
+            --     * fullDocument: How to return modified documents
+            --     * fullDocumentBeforeChange: How to return documents before changes
+            --     * showExpandedEvents: Return expanded list of events (MongoDB 6.0+)
+            -- Warning: Change streams require majority read concern
+        note
+            eis: "name=mongoc_database_watch", "src=https://mongoc.org/libmongoc/current/mongoc_database_watch.html", "protocol=uri"
+        require
+            is_usable: exists
+        local
+            l_pipeline, l_opts: POINTER
+        do
+            clean_up
+            if attached a_opts then
+                l_opts := a_opts.item
+            end
+            create Result.make_by_pointer (
+                {MONGODB_EXTERNALS}.c_mongoc_database_watch (item, a_pipeline.item, l_opts)
+            )
+        end
+
+
+	write_command_with_opts (a_command: BSON; a_opts: detachable BSON; a_reply: detachable BSON)
+            -- Execute a command on the server, applying logic specific to write commands.
+            -- Parameters:
+            --   a_command: The command to execute
+            --   a_opts: Optional additional options. May include:
+            --     * writeConcern: Configure write concern
+            --     * sessionId: For use within a session
+            --     * collation: Configure textual comparisons
+            --     * serverId: To target a specific server
+            -- Note: Do not use for basic write operations (insert, update, delete)
+            -- Note: In a transaction, write concern is prohibited in opts
+        note
+            eis: "name=mongoc_database_write_command_with_opts", "src=https://mongoc.org/libmongoc/current/mongoc_database_write_command_with_opts.html", "protocol=uri"
+        require
+            is_usable: exists
+        local
+            l_reply: POINTER
+            l_error: BSON_ERROR
+            l_opts_ptr: POINTER
+            l_success: BOOLEAN
+        do
+            clean_up
+
+            if attached a_opts then
+                l_opts_ptr := a_opts.item
+            end
+
+            if attached a_reply then
+                l_reply := a_reply.item
+            end
+
+            create l_error.make
+            l_success := {MONGODB_EXTERNALS}.c_mongoc_database_write_command_with_opts (
+                                    item,               -- database
+                                    a_command.item,     -- command
+                                    l_opts_ptr,         -- opts
+                                    l_reply,            -- reply
+                                    l_error.item)       -- error
+
+            if not l_success then
+                error := l_error
+            end
+        end
+
 feature -- Duplication
 
     db_copy: MONGODB_DATABASE
@@ -500,9 +702,6 @@ feature {NONE} -- Implementation
 		alias
 			"mongoc_database_destroy ((mongoc_database_t *)$a_database);	"
 		end
-
-
-
 
 
 end
