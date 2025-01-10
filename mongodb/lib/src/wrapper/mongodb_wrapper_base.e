@@ -19,6 +19,7 @@ feature -- Error
 			-- last error.
 
 	has_error: BOOLEAN
+			-- last_error
 			-- Indicates that there was an error during the last operation
 		do
 			Result := attached error
@@ -48,7 +49,7 @@ feature -- Status Report
 	is_usable: BOOLEAN
 			-- Is the API usable.
 		do
-			Result := not item.is_default_pointer 
+			Result := not item.is_default_pointer
 		end
 
 

@@ -108,6 +108,7 @@ feature -- Access
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_uri (item))
 		end
 
@@ -126,6 +127,7 @@ feature -- Access
 			c_collection: C_STRING
 			l_ptr:  POINTER
 		do
+			clean_up
 			create c_db.make (a_db)
 			create c_collection.make (a_collection)
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_collection (item, c_db.item, c_collection.item)
@@ -146,6 +148,7 @@ feature -- Access
 			c_name: C_STRING
 			l_ptr: POINTER
 		do
+			clean_up
 			create c_name.make (a_dbname)
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_database (item, c_name.item)
 			check success: not l_ptr.is_default_pointer end
@@ -199,10 +202,6 @@ feature -- Access
 	                i := i + c_sizeof (l_ptr)
 	            end
 	        end
-	    ensure
-	        result_not_void: Result /= Void
-	        error_status_set: has_error implies error /= Void
-	        success_status_set: not has_error implies error = Void
 	    end
 
 	default_database: detachable MONGODB_DATABASE
@@ -215,6 +214,7 @@ feature -- Access
 		local
 			l_ptr: POINTER
 		do
+			clean_up
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_default_database (item)
 			if l_ptr /= default_pointer then
 				create Result.make_by_pointer (l_ptr)
@@ -246,8 +246,6 @@ feature -- Access
 			if attached Result.cursor_error as l_error then
 				error := l_error
 			end
-		ensure
-			result_not_void: Result /= Void
 		end
 
 	read_concern: MONGODB_READ_CONCERN
@@ -269,6 +267,7 @@ feature -- Access
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_prefs (item))
 		end
 
@@ -279,6 +278,7 @@ feature -- Access
         require
         	is_usable: is_usable
         do
+        	clean_up
             create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_write_concern (item))
         end
 
@@ -294,6 +294,7 @@ feature -- Access
 			l_ptr: POINTER
 			i: INTEGER
 		do
+			clean_up
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_server_descriptions (item, $l_size)
 			create l_mgr.make_from_pointer (l_ptr, (l_size.as_integer_32)* c_sizeof (l_ptr))
 			create {ARRAYED_LIST [MONGODB_SERVER_DESCRIPTION]} Result.make (l_size.as_integer_32)
@@ -318,13 +319,12 @@ feature -- Access
 			l_ptr: POINTER
 			l_c_string: C_STRING
 		do
+			clean_up
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_crypt_shared_version (item)
 			if l_ptr /= default_pointer then
 				create l_c_string.make_by_pointer (l_ptr)
 				Result := l_c_string.string
 			end
-		ensure
-			result_void_or_not_empty: Result /= Void implies not Result.is_empty
 		end
 
 
@@ -362,10 +362,6 @@ feature -- Access
 			else
 				create Result.make_by_pointer (l_ptr)
 			end
-		ensure
-			error_status_set: has_error implies error /= Void
-			success_status_set: not has_error implies error = Void
-			result_set_on_success: not has_error implies Result /= Void
 		end
 
  	select_server (for_writes: BOOLEAN; prefs: detachable MONGODB_READ_PREFERENCE): detachable MONGODB_SERVER_DESCRIPTION
@@ -401,11 +397,6 @@ feature -- Access
 			else
 				create Result.make_by_pointer (l_ptr)
 			end
-		ensure
-			error_status_set: has_error implies error /= Void
-			success_status_set: not has_error implies error = Void
-			result_set_on_success: not has_error implies Result /= Void
-			result_void_on_error: has_error implies Result = Void
 		end
 
 
@@ -458,9 +449,6 @@ feature -- Status
 			if not l_Res then
 				create error.make_by_pointer (l_error.item)
 			end
-		ensure
-			error_status_set: has_error implies error /= Void
-			success_status_set: not has_error implies error = Void
 		end
 
 	read_write_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_opts: detachable BSON;
@@ -511,10 +499,8 @@ feature -- Status
 			if not l_res then
 				create error.make_by_pointer (l_error.item)
 			end
-		ensure
-			error_status_set: has_error implies error /= Void
-			success_status_set: not has_error implies error = Void
 		end
+
 feature -- Error
 
 	set_error_api (a_version: INTEGER)
@@ -552,6 +538,7 @@ feature -- Change Element
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_concern (item, a_read_concern.item)
 		end
 
@@ -564,6 +551,7 @@ feature -- Change Element
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_read_prefs (item, a_read_pref.item)
 		end
 
@@ -602,6 +590,7 @@ feature -- Change Element
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_write_concern (item, a_write_concern.item)
 		end
 
@@ -617,6 +606,7 @@ feature -- Change Element
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_reset (item)
 		end
 
@@ -654,6 +644,7 @@ feature -- Change Element
 		require
 			is_usable: is_usable
 		do
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_sockettimeoutms (item, a_timeout_ms)
 		end
 

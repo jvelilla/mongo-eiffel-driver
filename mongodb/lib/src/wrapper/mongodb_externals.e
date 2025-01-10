@@ -897,16 +897,205 @@ feature -- Mongo Database
 			]"
 		end
 
+	c_mongoc_database_add_user (a_database: POINTER; a_username: POINTER; a_password: POINTER; 
+                               a_roles: POINTER; a_custom_data: POINTER; a_error: POINTER): BOOLEAN
+            -- Create a new user with access to database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_username: const char* - The name of the user
+            --   a_password: const char* - The cleartext password for the user
+            --   a_roles: const bson_t* - Optional roles as BSON document
+            --   a_custom_data: const bson_t* - Optional custom data as BSON document
+            --   a_error: bson_error_t* - Optional error location
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_add_user(
+                    (mongoc_database_t *)$a_database,
+                    (const char *)$a_username,
+                    (const char *)$a_password,
+                    (const bson_t *)$a_roles,
+                    (const bson_t *)$a_custom_data,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+    c_mongoc_database_aggregate (a_database: POINTER; a_pipeline: POINTER; 
+                               a_opts: POINTER; a_read_prefs: POINTER): POINTER
+            -- Execute an aggregation pipeline on a database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - the database to aggregate from
+            --   a_pipeline: const bson_t* - the pipeline of aggregation operations
+            --   a_opts: const bson_t* - optional options for the command
+            --   a_read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            -- Returns:
+            --   A newly allocated mongoc_cursor_t that should be freed with mongoc_cursor_destroy()
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_aggregate(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_pipeline,
+                    (const bson_t *)$a_opts,
+                    (const mongoc_read_prefs_t *)$a_read_prefs
+                );
+            ]"
+        end
+
+    c_mongoc_database_command_simple (a_database: POINTER; a_command: POINTER; 
+                                    a_read_prefs: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the database with a simplified interface.
+            -- Parameters:
+            --   a_database: mongoc_database_t* - the database to execute the command on
+            --   a_command: const bson_t* - the command to execute
+            --   a_read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            --   a_reply: bson_t* - storage for the command's result document
+            --   a_error: bson_error_t* - optional error details
+            -- Returns: true on success, false on failure with error set
+            -- Note: This is not considered a retryable read operation
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_command_simple(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+    c_mongoc_database_command_with_opts (a_database: POINTER; a_command: POINTER; 
+                                       a_read_prefs: POINTER; a_opts: POINTER; 
+                                       a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, interpreting opts according to MongoDB server version.
+            -- Parameters:
+            --   a_database: mongoc_database_t* - the database to execute the command on
+            --   a_command: const bson_t* - the command to execute
+            --   a_read_prefs: const mongoc_read_prefs_t* - optional read preferences
+            --   a_opts: const bson_t* - optional additional options
+            --   a_reply: bson_t* - storage for the command's result document
+            --   a_error: bson_error_t* - optional error details
+            -- Note: This is not considered a retryable read operation.
+            -- Note: In a transaction, read concern and write concern are prohibited in opts
+            --       and the read preference must be primary or NULL.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_command_with_opts(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
+    c_mongoc_database_copy (a_database: POINTER): POINTER
+            -- Performs a deep copy of the database struct and its configuration.
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database to copy
+            -- Returns: A newly allocated mongoc_database_t that should be freed with mongoc_database_destroy()
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_copy((mongoc_database_t *)$a_database);"
+        end
+
+    c_mongoc_database_find_collections_with_opts (a_database: POINTER; a_opts: POINTER): POINTER
+            -- Fetches a cursor containing documents, each corresponding to a collection on this database.
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database to query
+            --   a_opts: const bson_t* - Optional additional options
+            -- Returns: A newly allocated mongoc_cursor_t that must be freed with mongoc_cursor_destroy()
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_find_collections_with_opts(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_opts
+                );
+            ]"
+        end
+
+    c_mongoc_database_get_read_concern (a_database: POINTER): POINTER
+            -- Retrieves the default read concern for the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            -- Returns: A mongoc_read_concern_t that should not be modified or freed
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_get_read_concern((const mongoc_database_t *)$a_database);"
+        end
+
+    c_mongoc_database_get_read_prefs (a_database: POINTER): POINTER
+            -- Fetches the default read preferences to use with database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            -- Returns: A mongoc_read_prefs_t that should not be modified or freed
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_get_read_prefs((const mongoc_database_t *)$a_database);"
+        end
+
+    c_mongoc_database_get_write_concern (a_database: POINTER): POINTER
+            -- Retrieves the default write concern for the database
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            -- Returns: A mongoc_write_concern_t that should not be modified or freed
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_database_get_write_concern((const mongoc_database_t *)$a_database);"
+        end
+
+    c_mongoc_database_read_command_with_opts (a_database: POINTER; a_command: POINTER; 
+                                            a_read_prefs: POINTER; a_opts: POINTER; 
+                                            a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic specific to read commands
+            -- Parameters:
+            --   a_database: mongoc_database_t* - The database instance
+            --   a_command: const bson_t* - The command to execute
+            --   a_read_prefs: const mongoc_read_prefs_t* - Optional read preferences
+            --   a_opts: const bson_t* - Optional additional options
+            --   a_reply: bson_t* - Storage for the command's result
+            --   a_error: bson_error_t* - Optional error information
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_database_read_command_with_opts(
+                    (mongoc_database_t *)$a_database,
+                    (const bson_t *)$a_command,
+                    (const mongoc_read_prefs_t *)$a_read_prefs,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
 feature -- Mongo Client Pool
 
 	c_mongoc_client_pool_new (a_uri: POINTER): POINTER
 		external
 			"C inline use <mongoc/mongoc.h>"
-		alias
-			"[
-				return mongoc_client_pool_new ((const mongoc_uri_t *)$a_uri);
-			]"
-		end
+			alias
+				"[
+					return mongoc_client_pool_new ((const mongoc_uri_t *)$a_uri);
+				]"
+			end
 
 	c_mongoc_client_pool_pop (a_pool: POINTER): POINTER
 		external
