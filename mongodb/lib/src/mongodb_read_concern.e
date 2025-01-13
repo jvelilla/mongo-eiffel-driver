@@ -118,4 +118,27 @@ feature {NONE} -- Measurement
 			"mongoc_read_concern_destroy ((mongoc_read_concern_t *)$a_read_concern);"
 		end
 
+feature -- Operations
+
+	append_to_bson (a_command: BSON)
+			-- Append this read concern to command options.
+			-- Useful for appending read concern to command options before passing
+			-- them to read command functions.
+			-- Returns: True on success, False if any arguments are invalid.
+		note
+			eis: "name=mongoc_read_concern_append", "src=http://mongoc.org/libmongoc/current/mongoc_read_concern_append.html", "protocol=uri"
+		require
+			exists: exists
+		local
+			l_res: BOOLEAN
+			l_error: BSON_ERROR
+		do
+			clean_up
+			l_res := {MONGODB_EXTERNALS}.c_mongoc_read_concern_append (item, a_command.item)
+			if not l_res then
+				create l_error.make
+				error := l_error
+			end
+		end
+
 end

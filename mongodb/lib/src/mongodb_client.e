@@ -731,6 +731,53 @@ feature -- Command
 			end
 		end
 
+
+feature -- Command
+
+    write_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON;
+                           a_opts: detachable BSON; a_reply: BSON)
+            -- Execute a command on the server, applying logic specific to write commands.
+            -- Note: Do not use this for basic write operations (insert, update, delete).
+            -- Use the CRUD operations or Bulk API instead.
+            -- `a_db_name': The name of the database to run the command on.
+            -- `a_command': A BSON containing the command specification.
+            -- `a_opts': Optional BSON document that may contain:
+            --   * writeConcern: Write concern for the command
+            --   * sessionId: Client session ID for transactions
+            --   * collation: Text comparison options
+            --   * serverId: To target a specific server
+            -- `a_reply': Location for the resulting document.
+        note
+            EIS: "name=mongoc_client_write_command_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_client_write_command_with_opts.html", "protocol=uri"
+        require
+            is_usable: exists
+        local
+            c_db: C_STRING
+            l_opts: POINTER
+            l_error: BSON_ERROR
+            l_res: BOOLEAN
+        do
+            clean_up
+            create c_db.make (a_db_name)
+            if attached a_opts then
+                l_opts := a_opts.item
+            end
+            create l_error.make
+
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_client_write_command_with_opts (
+                item,           -- client
+                c_db.item,     -- db_name
+                a_command.item, -- command
+                l_opts,        -- opts
+                a_reply.item,  -- reply
+                l_error.item   -- error
+            )
+
+            if not l_res then
+                create error.make_by_pointer (l_error.item)
+            end
+        end
+
 feature -- Session
 
 	start_session (a_opts: detachable MONGODB_SESSION_OPT): detachable MONGODB_CLIENT_SESSION

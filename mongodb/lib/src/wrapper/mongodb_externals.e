@@ -508,6 +508,24 @@ feature -- Client
 			]"
 		end
 
+	c_mongoc_client_write_command_with_opts (a_client: POINTER; a_db_name: POINTER;
+            a_command: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, applying logic specific to write commands
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                return mongoc_client_write_command_with_opts(
+                    (mongoc_client_t *)$a_client,
+                    (const char *)$a_db_name,
+                    (const bson_t *)$a_command,
+                    (const bson_t *)$a_opts,
+                    (bson_t *)$a_reply,
+                    (bson_error_t *)$a_error
+                );
+            ]"
+        end
+
 feature -- Mongo Collection
 
 	c_mongoc_collection_insert_one (a_collection: POINTER; a_document: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
@@ -1463,6 +1481,13 @@ feature -- Mongo Read Concern
 			]"
 		end
 
+    c_mongoc_read_concern_append (a_read_concern: POINTER; a_command: POINTER): BOOLEAN
+            -- Append read concern to command options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_read_concern_append((mongoc_read_concern_t *)$a_read_concern, (bson_t *)$a_command);"
+        end
 
 feature -- Mongo Server Description
 
@@ -1660,6 +1685,14 @@ feature -- Write Concern
 		alias
 			"mongoc_write_concern_set_journal((mongoc_write_concern_t *)$a_concern, $a_journal);"
 		end
+
+    c_mongoc_write_concern_append (a_write_concern: POINTER; a_command: POINTER): BOOLEAN
+            -- Append write concern to command options
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_write_concern_append((mongoc_write_concern_t *)$a_write_concern, (bson_t *)$a_command);"
+        end
 
 feature -- MongoDB Indexes
 

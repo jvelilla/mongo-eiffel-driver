@@ -56,18 +56,24 @@ feature -- Status Report
 
     is_default: BOOLEAN
             -- Returns true if write_concern has not been modified from the default.
+        require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_is_default (item)
         end
 
     is_acknowledged: BOOLEAN
             -- Returns true if write operations with this write concern will be acknowledged.
+       require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_is_acknowledged (item)
         end
 
     is_valid: BOOLEAN
             -- Returns true if the write concern is valid.
+ 	     require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_is_valid (item)
         end
@@ -76,19 +82,25 @@ feature -- Access
 
     w: INTEGER
             -- Get the w value for write concern.
+        require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_get_w (item)
         end
 
     wtimeout: INTEGER_64
             -- Get the wtimeout value in milliseconds.
+       require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_get_wtimeout_int64 (item)
         end
 
     wtag: detachable READABLE_STRING_8
             -- Get the wtag value, if any.
-        local
+		require
+            exists: exists
+       local
             c_string: C_STRING
             l_ptr: POINTER
         do
@@ -101,12 +113,16 @@ feature -- Access
 
     journal: BOOLEAN
             -- Get if journaling is required
+        require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_get_journal (item)
         end
 
     wmajority: BOOLEAN
             -- Returns true if the write must be propagated to a majority of nodes.
+         require
+            exists: exists
         do
             Result := {MONGODB_EXTERNALS}.c_mongoc_write_concern_get_wmajority (item)
         end
@@ -115,24 +131,32 @@ feature -- Element Change
 
     set_w (a_w: INTEGER)
             -- Set the w value for write concern.
+       require
+            exists: exists
         do
             {MONGODB_EXTERNALS}.c_mongoc_write_concern_set_w (item, a_w)
         end
 
     set_wtimeout (a_wtimeout: INTEGER_64)
             -- Set the wtimeout value in milliseconds.
+        require
+            exists: exists
         do
             {MONGODB_EXTERNALS}.c_mongoc_write_concern_set_wtimeout_int64 (item, a_wtimeout)
         end
 
     set_wmajority (a_wtimeout_msec: INTEGER_64)
             -- Set the write concern to require majority write concern.
+       require
+            exists: exists
         do
             {MONGODB_EXTERNALS}.c_mongoc_write_concern_set_wmajority (item, a_wtimeout_msec)
         end
 
     set_wtag (a_tag: READABLE_STRING_GENERAL)
             -- Set the wtag value.
+       require
+            exists: exists
         local
             l_string: C_STRING
         do
@@ -142,8 +166,34 @@ feature -- Element Change
 
     set_journal (a_journal: BOOLEAN)
             -- Set if journaling is required
+        require
+            exists: exists
         do
             {MONGODB_EXTERNALS}.c_mongoc_write_concern_set_journal (item, a_journal)
+        end
+
+
+feature -- Operations
+
+    append_to_bson (a_command: BSON)
+            -- Append this write concern to command options.
+            -- Useful for appending write concern to command options before passing
+            -- them to write command functions.
+            -- Returns: True on success, False if any arguments are invalid.
+        note
+            eis: "name=mongoc_write_concern_append", "src=http://mongoc.org/libmongoc/current/mongoc_write_concern_append.html", "protocol=uri"
+        require
+            exists: exists
+        local
+        	l_res: BOOLEAN
+        	l_error: BSON_ERROR
+        do
+        	clean_up
+            l_res := {MONGODB_EXTERNALS}.c_mongoc_write_concern_append (item, a_command.item)
+        	if not l_res then
+        		create l_error.make
+        		error := l_error
+        	end
         end
 
 feature {NONE} -- Measurement

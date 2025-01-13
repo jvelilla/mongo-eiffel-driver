@@ -33,6 +33,34 @@ feature {NONE} -- Initialization
 			value := {MONGODB_EXTERNALS}.mongoc_read_primary
 		end
 
+
+feature -- Change Element
+
+	mark_read_primary
+		do
+			value := {MONGODB_EXTERNALS}.mongoc_read_primary
+		end
+
+	mark_read_secondary
+		do
+			value := {MONGODB_EXTERNALS}.mongoc_read_secondary
+		end
+
+	mark_read_primary_preferred
+		do
+			value := {MONGODB_EXTERNALS}.mongoc_read_primary_preferred
+		end
+
+	mark_read_secondary_preferred
+		do
+			value := {MONGODB_EXTERNALS}.mongoc_read_secondary_preferred
+		end
+
+	mark_mongoc_read_nearest
+		do
+			value := {MONGODB_EXTERNALS}.mongoc_read_nearest
+		end
+
 feature -- Status Report
 
 	is_valid_value (a_value: INTEGER): BOOLEAN
