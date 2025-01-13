@@ -19,24 +19,17 @@ inherit
 		end
 
 create
-	make, make_by_pointer , make_from_json
+	make, make_by_pointer, make_from_json, make_from_json_value
 
 feature {NONE}-- Initialization
 
---	make
---		do
---			memory_make
---			bson_init
---		end
 
 	make
 		do
 			make_by_pointer (c_bson_new)
 		end
 
-
-
-	make_from_json (a_data: STRING_8)
+	make_from_json (a_data: READABLE_STRING_GENERAL)  -- JSON
 		local
 			l_data: C_STRING
 			l_error: BSON_ERROR
@@ -48,6 +41,20 @@ feature {NONE}-- Initialization
 			l_pointer := c_bson_new_from_json (l_data.item, l_data.count, l_error.item)
 			make_by_pointer (l_pointer)
 		end
+
+	make_from_json_value (a_data: JSON_VALUE)
+		local
+			l_data: C_STRING
+			l_error: BSON_ERROR
+			l_pointer: POINTER
+		do
+			create l_error.make
+			create l_data.make (a_data.representation)
+				--see https://mongoc.org/libbson/current/bson_new_from_json.html
+			l_pointer := c_bson_new_from_json (l_data.item, l_data.count, l_error.item)
+			make_by_pointer (l_pointer)
+		end
+
 
 	bson_init
 			-- Initializes the given bson_t structure.

@@ -1,71 +1,38 @@
-# mongo-eiffel-driver
+# MongoDB Eiffel Driver
 
-Status: under development.
+A MongoDB driver implementation for the Eiffel programming language, providing a wrapper around the MongoDB C Driver (libmongoc).
 
-# Installing the MongoDB C Driver
+## Overview
 
-http://mongoc.org/libmongoc/current/installing.html
+This project provides a MongoDB driver for Eiffel, consisting of:
 
-# Installing MongoDB
+- **C Driver**: The C driver for MongoDB
+- **BSON Library**: A wrapper for the BSON (Binary JSON) implementation
+- **MongoDB Library**: The core MongoDB driver functionality
+- **Example REST API**: A demonstration of using the driver in a real application
+- **Tutorial**: A tutorial showing how to use the driver
 
-Tutorial: 
-  * Windows: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
+## Project Structure
 
-  * Linux:   http://mongoc.org/libmongoc/current/installing.html#building-from-a-release-tarball
+The project is organized into several main components:
 
-	
-## Setting Up MongoDB with Docker Compose
+- `/C`: C driver build utilities
+  - Contains scripts for building the required C libraries
+ 
 
-This project uses Docker Compose to set up a MongoDB server and a Mongo Express client for easy database management. Follow the steps below to get started:
-
-### Prerequisites
-
-- Ensure you have Docker and Docker Compose installed on your machine. You can download them from [Docker's official website](https://www.docker.com/products/docker-desktop).
-
-
-1. **Start the Services**
-
-   Use Docker Compose to start the MongoDB server and Mongo Express client:
-
-   ```bash
-   docker-compose up -d
-   ```
-
-   The `-d` flag runs the containers in detached mode, allowing you to continue using your terminal.
-
-2. **Access Mongo Express**
-
-   Once the services are up and running, you can access the Mongo Express client in your web browser at:
-
-   ```
-   http://localhost:8081
-   ```
-
-   This interface allows you to manage your MongoDB databases easily.
-   Credentials(admin, pass)
-
-4. **Stop the Services**
-
-   To stop the running services, use the following command:
-
-   ```bash
-   docker-compose down
-   ```
-
-   This will stop and remove the containers, but your data will persist in the `mongodb_data` volume.
-
-### Configuration
-
-- **MongoDB Server**: The MongoDB server is exposed on port `27017`.
-- **Mongo Express**: The Mongo Express client is accessible on port `8081`.
-
-### Volumes and Networks
-
-- **Volumes**: The `mongodb_data` volume is used to persist MongoDB data.
-- **Networks**: The `mongodb_network` is used to facilitate communication between the MongoDB server and the Mongo Express client.
-
-For more information on Docker Compose, refer to the [official documentation](https://docs.docker.com/compose/).
+- `/bson`: BSON implementation wrapper
+ 
+- `/mongodb`: Core MongoDB driver
+  - `/tutorial`: Tutorial showing how to use the driver
+ 
+- `/examples`: Sample implementations
+  - REST API example showing real-world usage
+  - Demonstrates basic CRUD operations
 
 
+## Prerequisites
 
+- Eiffel Studio (latest version recommended)
+- C compiler (for building the MongoDB C Driver)
+- MongoDB server (for running the examples)
 
