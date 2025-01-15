@@ -234,13 +234,15 @@ feature -- Encryption
 			end
 		end
 
-feature {NONE} -- Measurement
+feature -- Measurement
 
 	structure_size: INTEGER
 			-- Size to allocate (in bytes)
 		do
 			Result := struct_size
 		end
+
+feature {NONE} -- Implementation
 
 	struct_size: INTEGER
 		external

@@ -1666,6 +1666,41 @@ feature -- MongoDB Session Options
 			]"
 		end
 
+	c_mongoc_session_opts_set_default_transaction_opts (a_opts: POINTER; a_txn_opts: POINTER)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_session_opts_set_default_transaction_opts ((mongoc_session_opt_t *)$a_opts, (const mongoc_transaction_opt_t *)$a_txn_opts);"
+		end
+
+	c_mongoc_session_opts_get_default_transaction_opts (a_opts: POINTER): POINTER
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_session_opts_get_default_transaction_opts ((const mongoc_session_opt_t *)$a_opts);"
+		end
+
+	c_mongoc_session_opts_get_snapshot (a_opts: POINTER): BOOLEAN
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"return mongoc_session_opts_get_snapshot ((const mongoc_session_opt_t *)$a_opts);"
+		end
+
+	c_mongoc_session_opts_get_transaction_opts (a_session: POINTER): POINTER
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_session_opts_get_transaction_opts ((const mongoc_client_session_t *)$a_session);"
+        end
+
+	c_mongoc_session_opts_set_snapshot (a_opts: POINTER; a_snapshot: BOOLEAN)
+		external
+			"C inline use <mongoc/mongoc.h>"
+		alias
+			"mongoc_session_opts_set_snapshot ((mongoc_session_opt_t *)$a_opts, (bool)$a_snapshot);"
+		end
+
 feature -- Write Concern
 
 	c_mongoc_write_concern_new: POINTER
