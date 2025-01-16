@@ -556,6 +556,18 @@ feature -- Client
             ]"
         end
 
+ 	c_mongoc_client_set_ssl_opts (a_client: POINTER; a_opts: POINTER)
+            -- Sets the SSL options for the client
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+                #ifdef MONGOC_ENABLE_SSL
+                    mongoc_client_set_ssl_opts ((mongoc_client_t *)$a_client, (const mongoc_ssl_opt_t *)$a_opts);
+                #endif
+            ]"
+        end
+
 feature -- Mongo Collection
 
 	c_mongoc_collection_insert_one (a_collection: POINTER; a_document: POINTER; a_opts: POINTER; a_reply: POINTER; a_error: POINTER): BOOLEAN
@@ -715,6 +727,14 @@ feature -- Mongo Collection
                     (bson_error_t *)$error
                 );
             ]"
+        end
+
+    c_mongoc_client_get_server_description (a_client: POINTER; a_server_id: NATURAL_32): POINTER
+            -- Get information about the server specified by server_id.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_client_get_server_description ((mongoc_client_t *)$a_client, (uint32_t)$a_server_id);"
         end
 
 feature -- Collection Operations
