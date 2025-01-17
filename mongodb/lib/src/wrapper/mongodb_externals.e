@@ -638,21 +638,6 @@ feature -- Mongo Collection
 			]"
 		end
 
-	c_mongoc_collection_count (a_collection: POINTER; a_flags: INTEGER; a_query: POINTER; a_skip: INTEGER_64; a_limit: INTEGER_64; a_read_prefs: POINTER; a_error: POINTER): INTEGER_64
-		external
-			"C inline use <mongoc/mongoc.h>"
-		alias
-			"[
-					return (EIF_INTEGER_64)
-					mongoc_collection_count ((mongoc_collection_t *)$a_collection,
-				                         (mongoc_query_flags_t)$a_flags,
-				                         (const bson_t *)$a_query,
-				                         (int64_t)$a_skip,
-				                         (int64_t)$a_limit,
-				                         (const mongoc_read_prefs_t *)$a_read_prefs,
-				                         (bson_error_t *)$a_error);
-			]"
-		end
 
 	c_mongoc_collection_drop_with_opts (a_collection: POINTER; a_opts: POINTER; a_error: POINTER): BOOLEAN
 		external
@@ -702,6 +687,28 @@ feature -- Mongo Collection
 				);
 			]"
 		end
+
+
+	c_mongoc_collection_find_and_modify_with_opts (
+            a_collection: POINTER;
+            a_query: POINTER;
+            a_opts: POINTER;
+            a_reply: POINTER;
+            a_error: POINTER): BOOLEAN
+            -- Find and modify documents matching query, with the given options.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "[
+            	return mongoc_collection_find_and_modify_with_opts (
+            			(mongoc_collection_t *)$a_collection, 
+            			(const bson_t *)$a_query, 
+            			(const mongoc_find_and_modify_opts_t *)$a_opts, 
+            			(bson_t *)$a_reply, 
+            			(bson_error_t *)$a_error
+            			);
+            ]"
+        end
 
 
  	c_mongoc_collection_update_many (collection: POINTER; selector: POINTER; update: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
@@ -807,6 +814,19 @@ feature -- Collection Operations
             ]"
         end
 
+    c_mongoc_collection_command_with_opts (a_collection: POINTER;
+                                         a_command: POINTER;
+                                         a_read_prefs: POINTER;
+                                         a_opts: POINTER;
+                                         a_reply: POINTER;
+                                         a_error: POINTER): BOOLEAN
+            -- Execute a command on the server, interpreting opts according to the MongoDB server version.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_collection_command_with_opts ((mongoc_collection_t *)$a_collection, (const bson_t *)$a_command, (const mongoc_read_prefs_t *)$a_read_prefs, (const bson_t *)$a_opts, (bson_t *)$a_reply, (bson_error_t *)$a_error);"
+        end
+
     c_mongoc_collection_delete_many (collection: POINTER; selector: POINTER; opts: POINTER; reply: POINTER; error: POINTER): BOOLEAN
             -- Delete all documents matching selector
             -- Parameters:
@@ -885,6 +905,22 @@ feature -- Collection Operations
                     (const bson_t *)$opts
                 );
             ]"
+        end
+
+    c_mongoc_collection_copy (a_collection: POINTER): POINTER
+            -- Create a deep copy of the collection struct and its configuration.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_collection_copy ((mongoc_collection_t *)$a_collection);"
+        end
+
+    c_mongoc_collection_create_bulk_operation_with_opts (a_collection: POINTER; a_opts: POINTER): POINTER
+            -- Create a new bulk operation with the given options.
+        external
+            "C inline use <mongoc/mongoc.h>"
+        alias
+            "return mongoc_collection_create_bulk_operation_with_opts ((mongoc_collection_t *)$a_collection, (const bson_t *)$a_opts);"
         end
 
 feature -- Mongo Database
