@@ -19,7 +19,6 @@ feature {NONE} -- Initialization
             collection: MONGODB_COLLECTION
             uri: MONGODB_URI
             validator: BSON
-            error: BSON_ERROR
         do
             -- Initialize MongoDB client with URI
             create uri.make ("mongodb://localhost:27017/admin?appname=find-and-modify-opts-example")
@@ -70,7 +69,6 @@ feature {NONE} -- Implementation
             flags: MONGODB_FIND_AND_MODIFY_FLAGS
             query, update: BSON
             reply: BSON
-            error: BSON_ERROR
             goals: INTEGER
         do
         	goals := ((16 + 35 + 23 + 57 + 16 + 14 + 28 + 84) + (1 + 6 + 62)) -- 342
@@ -123,7 +121,6 @@ feature {NONE} -- Implementation
             opts: MONGODB_FIND_AND_MODIFY_OPTS
             query, update: BSON
             reply: BSON
-            error: BSON_ERROR
         do
             	-- Create query to find Zlatan Ibrahimovic
             create query.make_from_json (
@@ -169,7 +166,6 @@ feature {NONE} -- Implementation
             opts: MONGODB_FIND_AND_MODIFY_OPTS
             query, update: BSON
             reply: BSON
-            error: BSON_ERROR
         do
             	-- Create query to find Zlatan Ibrahimovic
             create query.make_from_json (
@@ -214,7 +210,6 @@ feature {NONE} -- Implementation
             query, update, fields: BSON
             flags: MONGODB_FIND_AND_MODIFY_FLAGS
             reply: BSON
-            error: BSON_ERROR
         do
             	-- Create query to find Zlatan Ibrahimovic
             create query.make_from_json (
@@ -269,7 +264,6 @@ feature {NONE} -- Implementation
             opts: MONGODB_FIND_AND_MODIFY_OPTS
             query, update, extra: BSON
             reply: BSON
-            error: BSON_ERROR
         do
             	-- Create query to find Zlatan Ibrahimovic
             create query.make_from_json (
@@ -328,7 +322,6 @@ feature {NONE} -- Implementation
             opts: MONGODB_FIND_AND_MODIFY_OPTS
             query, update, sort: BSON
             reply: BSON
-            error: BSON_ERROR
         do
             	-- Create query to find users with lastname "Ibrahimovic"
             create query.make_from_json (
