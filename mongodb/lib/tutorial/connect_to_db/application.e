@@ -33,8 +33,8 @@ feature {NONE} -- Initialization
 				-- Verify connection with ping
 			l_client.command_simple ("admin", l_ping, Void, l_reply)
 
-			if l_client.has_error then
-				print ("Error: " + l_client.error_string + " %N")
+			if l_client.last_Error then
+				print ("Error: " + l_client.error_string.to_string_8 + " %N")
 			else
 				print ("Pinged your deployment. You successfully connected to MongoDB!%N" + l_reply.bson_as_canonical_extended_json)
 

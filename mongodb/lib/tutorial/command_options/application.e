@@ -35,7 +35,7 @@ feature {NONE} -- Initialization
 
             	-- Create URI and client
             create l_uri.make (l_uri_string)
-            if not l_uri.has_error then
+            if not l_uri.last_error then
                 create l_client.make_from_uri (l_uri)
 
                 	-- Set error API version
@@ -56,8 +56,8 @@ feature {NONE} -- Initialization
                 	-- Execute write command
                 create l_reply.make
                 l_client.write_command_with_opts ("test", l_cmd, l_opts, l_reply)
-                if l_client.has_error then
-                    print ("cloneCollectionAsCapped error: " + l_client.error_string + "%N")
+                if l_client.last_error then
+                    print ("cloneCollectionAsCapped error: " + l_client.error_string.to_string_8 + "%N")
                 else
                 	l_json := l_reply.bson_as_canonical_extended_json
                     print ("cloneCollectionAsCapped: " + l_json + "%N")
@@ -86,15 +86,15 @@ feature {NONE} -- Initialization
                 	-- Execute read command
                 create l_reply.make
                 l_client.read_command_with_opts ("test", l_cmd, l_read_prefs, l_opts, l_reply)
-                if l_client.has_error then
-                	print ("distinct error: " + l_client.error_string + "%N")
+                if l_client.last_error then
+                	print ("distinct error: " + l_client.error_string.to_string_8 + "%N")
                 else
                     l_json := l_reply.bson_as_canonical_extended_json
                     print ("distinct: " + l_json + "%N")
                 end
 
             else
-                print ("Failed to parse URI: " + l_uri.error_string + "%N")
+                print ("Failed to parse URI: " + l_uri.error_string.to_string_8 + "%N")
             end
         end
 

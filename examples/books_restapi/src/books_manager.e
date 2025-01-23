@@ -169,7 +169,7 @@ feature {NONE} -- Implementation
 			-- check if there was an error during the last execution
 			-- and set the error `a_error' to error.
 		do
-			if mongodb_collection.has_error then
+			if mongodb_collection.last_error then
 				create error.make_by_pointer (a_error.item)
 			end
 		end

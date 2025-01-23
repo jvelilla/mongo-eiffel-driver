@@ -31,7 +31,7 @@ feature {NONE} -- Initialization
             create reply.make
             client.command_simple ("admin", command, Void, reply)
 
-            if not client.has_error then
+            if not client.last_error then
                 print ("Server pinged successfully!%N")
                 print ("Reply: " + reply.bson_as_canonical_extended_json_value.representation + "%N")
             else

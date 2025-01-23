@@ -46,8 +46,8 @@ feature {NONE} -- Initialization
 
 				-- Create the index
 			collection.create_indexes_with_opts (list, Void, reply)
-			if collection.has_error then
-				print ("Failed to create index: " + collection.error_string + "%N")
+			if collection.last_error then
+				print ("Failed to create index: " + collection.error_string.to_string_8 + "%N")
 			else
 				print ("Successfully created unique index on 'name' field%N")
 				search (collection)

@@ -35,7 +35,7 @@ feature {NONE} -- Initialization
 
                 -- Execute command
             collection.command_simple (cmd, Void, reply)
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Got reply: " + reply.bson_as_canonical_extended_json + "%N")
             else
                 print ("Got error: " + collection.error_string + "%N")

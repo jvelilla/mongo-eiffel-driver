@@ -29,7 +29,7 @@ feature {NONE} -- Initialization
             	-- Delete document
             create l_reply.make
             collection.delete_one (query, Void, l_reply)
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Document deleted successfully%N" + l_reply.bson_as_canonical_extended_json)
             else
                 print ("Error: " + collection.error_string+ "%N")

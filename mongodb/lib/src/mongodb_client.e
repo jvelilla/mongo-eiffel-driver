@@ -743,7 +743,7 @@ feature -- Command
             create l_command.make_from_json ("{ping: 1}")
             create l_reply.make
             command_simple (a_db, l_command, Void, l_reply)
-            Result := not has_error
+            Result := not last_error
         end
 
 	command_simple (a_db:READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON)

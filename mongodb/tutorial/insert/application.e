@@ -28,7 +28,7 @@ feature {NONE} -- Initialization
                 -- Insert document
             create reply.make
             collection.insert_one (doc, Void, reply)
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Document inserted successfully; %N" + reply.bson_as_canonical_extended_json)
             else
                 print ("Error: " + collection.error_string + "%N")

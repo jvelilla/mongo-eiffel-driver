@@ -34,7 +34,7 @@ feature {NONE} -- Initialization
 				-- Insert the document
 			create l_reply.make
 			collection.insert_one (query, Void, l_reply)
-			if not collection.has_error then
+			if not collection.last_error then
 				print ("Document inserted successfully%N" + l_reply.bson_as_canonical_extended_json)
 
 					-- Prepare update operation
@@ -47,7 +47,7 @@ feature {NONE} -- Initialization
 
 					-- Update document
 				collection.update_one (query, update, Void, l_reply)
-				if not collection.has_error then
+				if not collection.last_error then
 					print ("%NDocument updated successfully%N" + l_reply.bson_as_canonical_extended_json)
 				else
 					print ("Update error: " + collection.error_string + "%N")

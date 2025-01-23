@@ -48,7 +48,7 @@ feature {NONE} -- Initialization
                     -- Collection already exists, get it
                     collection := database.collection ("collection")
                 else
-                    print ("Failed to create collection: " + database.error_string)
+                    print ("Failed to create collection: " + database.error_string.to_string_8)
                     -- Exit with failure
                     {EXCEPTIONS}.die (1)
                 end
@@ -67,7 +67,7 @@ feature {NONE} -- Initialization
             	-- Start session
             session := client.start_session (session_opts)
             if session = Void then
-                print ("Failed to start session: " + client.error_string)
+                print ("Failed to start session: " + client.error_string.to_string_8)
                 {EXCEPTIONS}.die (1)
             end
 
@@ -105,8 +105,8 @@ feature {NONE} -- Implementation
         do
             	-- Start transaction
             session.start_transaction (txn_opts)
-            if session.has_error  then
-                print ("Failed to start transaction: " + session.error_string)
+            if session.last_error  then
+                print ("Failed to start transaction: " + session.error_string.to_string_8)
                 Result := True -- Don't retry
                 {EXCEPTIONS}.die (1)
             else
@@ -120,8 +120,8 @@ feature {NONE} -- Implementation
                     doc.bson_append_integer_32 ("_id", i)
                     create reply.make
 					collection.insert_one (doc, insert_opts, reply)
-                    if not collection.has_error  then
-                        print ("Insert failed: " + collection.error_string)
+                    if not collection.last_error  then
+                        print ("Insert failed: " + collection.error_string.to_string_8)
                         session.abort_transaction
 
  	                       -- Check for transient error
@@ -151,10 +151,10 @@ feature {NONE} -- Implementation
                     loop
                         create reply.make
                         session.commit_transaction (reply)
-                        if not session.has_error then
+                        if not session.last_error then
                             Result := True -- Success
                         else
-                            print ("Warning: commit failed: " + session.error_string + "%N")
+                            print ("Warning: commit failed: " + session.error_string.to_string_8 + "%N")
                             if session.error_string.has_substring ("TransientTransactionError") then
                                 Result := False -- Retry entire transaction
                             elseif session.error_string.has_substring ("UnknownTransactionCommitResult") then

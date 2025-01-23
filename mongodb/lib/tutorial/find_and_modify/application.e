@@ -63,8 +63,8 @@ feature -- Initialization
             )
 
             	-- Check for errors
-            if collection.has_error then
-                print ("find_and_modify() failure: " + collection.error_string + "%N")
+            if collection.last_error then
+                print ("find_and_modify() failure: " + collection.error_string.to_string_8 + "%N")
             else
                 -- Print the result as JSON
                 print (reply.bson_as_canonical_extended_json + "%N")

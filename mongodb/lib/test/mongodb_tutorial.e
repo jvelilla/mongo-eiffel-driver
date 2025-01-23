@@ -162,7 +162,7 @@ feature -- Tutorial
 			create l_reply.make
 			l_client.command_simple ("db_name", l_command, Void, l_reply)
 
-			if l_client.has_error then
+			if l_client.last_error then
 				print ("%NOperation: l_client.command_simple " + l_collection.error_string)
 			else
 				print ("%N bson output: " +l_reply.bson_as_canonical_extended_json)
@@ -172,7 +172,7 @@ feature -- Tutorial
 			l_insert.bson_append_utf8 ("hello", "world")
 
 			l_collection.insert_one (l_insert, Void, Void)
-			if l_collection.has_error then
+			if l_collection.last_error then
 				print ("%NOperation l_collection.insert_one " + l_collection.error_string)
 			end
 
@@ -268,7 +268,7 @@ feature -- Crud
 			l_doc.bson_append_utf8 ("hello", "new eiffel")
 
 			l_collection.insert_one (l_doc, Void, Void)
-			if l_collection.has_error then
+			if l_collection.last_error then
 				print ("Last Operation l_collection.insert_one: " + l_collection.error_string)
 			end
 
@@ -366,7 +366,7 @@ feature -- Crud
 
 
 			l_collection.update_one (l_query, l_update, Void, Void)
-			if l_collection.has_error then
+			if l_collection.last_error then
 				print ("Last Operation : l_collection.update_one: " + l_collection.error_string)
 			end
 
@@ -390,7 +390,7 @@ feature -- Crud
 			l_doc.bson_append_utf8 ("hello", "world")
 
 			l_collection.insert_one (l_doc, Void, Void)
-			if l_collection.has_error then
+			if l_collection.last_error then
 				print ("Last Operation : l_collection.insert_one: " + l_collection.error_string)
 			end
 
@@ -399,7 +399,7 @@ feature -- Crud
 			create l_doc.make
 			l_doc.bson_append_oid ("_id", l_oid)
 			l_collection.delete_one (l_doc, Void, Void)
-			if l_collection.has_error then
+			if l_collection.last_error then
 				print ("Last Operation : l_collection.delete_one: " + l_collection.error_string)
 			end
 

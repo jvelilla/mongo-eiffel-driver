@@ -45,7 +45,7 @@ feature {NONE} -- Initialization
             count := collection.count_documents (filter, opts, Void, reply)
 
             if count < 0 then
-                print ("Count failed: " + collection.error_string + "%N")
+                print ("Count failed: " + collection.error_string.to_string_8 + "%N")
             else
                 print (count.out + " documents counted.%N")
                 print ("Full reply: " + reply.bson_as_canonical_extended_json + "%N")

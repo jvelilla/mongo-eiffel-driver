@@ -108,10 +108,10 @@ feature {NONE} -- Implementation
             create reply.make
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Find and modify with flags result: " + reply.bson_as_canonical_extended_json + "%N")
             else
-                print ("Got error: %"" + collection.error_string + "%" %N")
+                print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             end
         end
 
@@ -152,10 +152,10 @@ feature {NONE} -- Implementation
             create reply.make
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Find and modify with bypass validation result: " + reply.bson_as_canonical_extended_json + "%N")
             else
-                print ("Got error: %"" + collection.error_string + "%" %N")
+                print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             end
 
         end
@@ -196,10 +196,10 @@ feature {NONE} -- Implementation
             create reply.make
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Find and modify update result: " + reply.bson_as_canonical_extended_json + "%N")
             else
-                print ("Got error: %"" + collection.error_string + "%" %N")
+                print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             end
         end
 
@@ -251,10 +251,10 @@ feature {NONE} -- Implementation
             create reply.make
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Find and modify with field selection result: " + reply.bson_as_canonical_extended_json + "%N")
             else
-                print ("Got error: %"" + collection.error_string + "%" %N")
+                print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             end
         end
 
@@ -308,10 +308,10 @@ feature {NONE} -- Implementation
             create reply.make
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if not collection.has_error then
+            if not collection.last_error then
                 print ("Find and modify with extra options result: " + reply.bson_as_canonical_extended_json + "%N")
             else
-                print ("Got error: %"" + collection.error_string + "%" %N")
+                print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             end
 
         end
@@ -355,8 +355,8 @@ feature {NONE} -- Implementation
             	-- Perform find_and_modify operation
             collection.find_and_modify_with_opts (query, opts, reply)
 
-            if collection.has_error then
-				print ("Got error: %"" + collection.error_string + "%" %N")
+            if collection.last_error then
+				print ("Got error: %"" + collection.error_string.to_string_8 + "%" %N")
             else
                 print ("Find and modify with sort result: " + reply.bson_as_canonical_extended_json + "%N")
             end
