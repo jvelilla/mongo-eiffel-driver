@@ -25,8 +25,6 @@ feature {NONE}-- Initialization
 	make (a_uri: READABLE_STRING_GENERAL)
 			-- Creates a new MongoClient using the URI string `a_uri' provided.
 		do
-			memory_make
-			mongoc_init
 			new_mongoc_client (a_uri)
 		end
 
@@ -35,8 +33,6 @@ feature {NONE}-- Initialization
 		note
 			eis: "name=mongoc_client_new_from_uri ", "src=https://mongoc.org/libmongoc/current/mongoc_client_new_from_uri.html", "protocol=uri"
 		do
-			memory_make
-			mongoc_init
 			new_from_uri_with_error (a_uri)
 		end
 
@@ -61,7 +57,7 @@ feature {NONE} -- Implementation
 					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
 					"Failed to create new MongoDB client with URI: " + a_uri.to_string_8
 				)
-				error := l_error
+				set_last_error_with_bson (l_error)
 			else
 				make_by_pointer (l_ptr)
 			end
@@ -77,8 +73,8 @@ feature {NONE} -- Implementation
 			create l_error.make
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_new_from_uri_with_error (a_uri.item, l_error.item)
 
-			if l_ptr = default_pointer then
-				error := l_error
+			if l_ptr.is_default_pointer then
+				set_last_error_with_bson (l_error)
 			else
 				make_by_pointer (l_ptr)
 			end
@@ -100,7 +96,6 @@ feature -- Removal
 			if shared then
 				c_mongoc_client_destroy (item)
 			end
-			{MONGODB_EXTERNALS}.c_mongo_cleanup
 		end
 
 feature -- Access
@@ -189,7 +184,7 @@ feature -- Access
 	        l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_get_database_names_with_opts (item, l_opts, l_error.item)
 
 	        if l_ptr.is_default_pointer then
-	            error := l_error
+	            set_last_error_with_bson (l_error)
 	            create {ARRAYED_LIST [STRING]} Result.make (0)
 	        else
 	            l_res := {MONGODB_EXTERNALS}.c_mongoc_client_get_database_names_count (item, l_opts, l_error.item)
@@ -260,7 +255,7 @@ feature -- Access
 			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_get_read_concern (item))
 		end
 
-	read_preferences: MONGODB_READ_PREFERENCE
+	read_preferences: MONGODB_READ_PREFERENCES
 				-- Retrieves the default read preferences configured for the client instance.
 				-- This result should not be modified
 		note
@@ -326,7 +321,7 @@ feature -- Access
 			end
 		end
 
-	get_crypt_shared_version: detachable STRING
+	crypt_shared_version: detachable STRING
 			-- Obtain the version string of the crypt_shared that is loaded for auto-encryption.
 			-- Returns Void if no crypt_shared library is loaded or auto-encryption is not loaded.
 		note
@@ -346,7 +341,7 @@ feature -- Access
 		end
 
 
-	get_handshake_description (a_server_id: NATURAL_32; a_opts: detachable BSON): detachable MONGODB_SERVER_DESCRIPTION
+	handshake_description (a_server_id: NATURAL_32; a_opts: detachable BSON): detachable MONGODB_SERVER_DESCRIPTION
 			-- Returns a description constructed from the initial handshake response to a server.
 			-- Note: This is distinct from `get_server_description`. This returns a server description
 			-- constructed from the connection handshake, which may differ from the server description
@@ -376,13 +371,13 @@ feature -- Access
 			)
 
 			if l_ptr.is_default_pointer then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			else
 				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
- 	select_server (for_writes: BOOLEAN; prefs: detachable MONGODB_READ_PREFERENCE): detachable MONGODB_SERVER_DESCRIPTION
+ 	select_server (for_writes: BOOLEAN; prefs: detachable MONGODB_READ_PREFERENCES): detachable MONGODB_SERVER_DESCRIPTION
 			-- Choose a server for an operation, according to the Server Selection Spec.
 			-- `for_writes': Whether to choose a server suitable for writes or reads.
 			-- `prefs': Optional read preferences. If for_writes is True, prefs must be Void.
@@ -411,7 +406,7 @@ feature -- Access
 			)
 
 			if l_ptr.is_default_pointer then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			else
 				create Result.make_by_pointer (l_ptr)
 			end
@@ -426,7 +421,7 @@ feature -- Status
 			Result := {MONGODB_EXTERNALS}.is_ssl_enabled
 		end
 
-	read_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE;
+	read_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES;
 							a_opts: detachable BSON; a_reply: BSON; )
 			-- Execute a command on the server, applying logic specific to read commands.
 			-- This is a retryable read operation that will be retried once upon transient errors.
@@ -471,11 +466,11 @@ feature -- Status
 			)
 
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-	read_write_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_opts: detachable BSON;
+	read_write_command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES; a_opts: detachable BSON;
 			a_reply: BSON)
 			-- Execute a command on the server that both reads and writes.
 			-- Note: The read_prefs parameter is ignored (included by mistake in libmongoc 1.5)
@@ -521,7 +516,7 @@ feature -- Status
 			)
 
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -548,7 +543,7 @@ feature -- Error
 					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
 					"Failed to set error API version to: " + a_version.out
 				)
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -567,7 +562,7 @@ feature -- Settings
 		end
 
 
-	set_read_preference (a_read_pref: MONGODB_READ_PREFERENCE)
+	set_read_preference (a_read_pref: MONGODB_READ_PREFERENCES)
 			-- Sets the default read preferences to use with future operations
 			-- The global default is to read from the replica set primary.
 		note
@@ -603,7 +598,7 @@ feature -- Settings
 					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
 					"Failed to set appname to: " + a_name.out
 				)
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -654,7 +649,7 @@ feature -- Settings
 				l_error.item -- error
 			)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -672,7 +667,7 @@ feature -- Settings
 			{MONGODB_EXTERNALS}.c_mongoc_client_set_sockettimeoutms (item, a_timeout_ms)
 		end
 
-    set_ssl_opts (a_opts: MONGODB_SSL_OPTS)
+    set_ssl_opts (a_opts: MONGODB_SSL_OPTIONS)
             -- Sets the TLS (SSL) options to use when connecting to TLS enabled MongoDB servers.
             -- Note: This overrides all TLS options set through the connection string.
             -- Warning: It is a programming error to call this on a client from a client pool.
@@ -693,7 +688,7 @@ feature -- Settings
                     {MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_AUTHENTICATE,
                     "SSL support is not enabled in this build of the MongoDB C driver"
                 )
-                error := l_error
+                set_last_error_with_bson (l_error)
             end
         end
 
@@ -725,7 +720,7 @@ feature -- Encryption
                 l_error.item   -- error
             )
             if not l_res then
-                create error.make_by_pointer (l_error.item)
+            	set_last_error_with_bson (l_error)
             end
         end
 
@@ -743,10 +738,10 @@ feature -- Command
             create l_command.make_from_json ("{ping: 1}")
             create l_reply.make
             command_simple (a_db, l_command, Void, l_reply)
-            Result := not last_error
+            Result := last_call_succeed
         end
 
-	command_simple (a_db:READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON)
+	command_simple (a_db:READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES; a_reply: BSON)
 			-- This is a simplified interface to mongoc_client_command(). It returns the first document from the result cursor into reply.
 			-- The client’s read preference, read concern, and write concern are not applied to the command.
 			-- 'a_db': The name of the database to run the command on.
@@ -761,7 +756,7 @@ feature -- Command
 			c_db: C_STRING
 			l_res: BOOLEAN
 			l_read_prefs:  POINTER
-			l_error: BSON
+			l_error: BSON_ERROR
 		do
 			clean_up
 			create c_db.make (a_db)
@@ -774,11 +769,11 @@ feature -- Command
 
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_simple (item, c_db.item, a_command.item, l_read_prefs, a_reply.item, l_error.item)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-	command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_opts:detachable BSON;  a_reply: BSON)
+	command_with_opts (a_db_name: READABLE_STRING_GENERAL; a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES; a_opts:detachable BSON;  a_reply: BSON)
 			-- Execute a command on the server, interpreting opts according to the MongoDB server version.
 			-- 'a_db_name': The name of the database to run the command on.
 			-- 'a_command': A bson_t containing the command specification.
@@ -808,7 +803,7 @@ feature -- Command
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_command_with_opts (item, c_db.item, a_command.item, l_read_prefs, l_opts, a_reply.item, l_error.item)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -852,13 +847,13 @@ feature -- Command
             )
 
             if not l_res then
-                create error.make_by_pointer (l_error.item)
+                set_last_error_with_bson (l_error)
             end
         end
 
 feature -- Session
 
-	start_session (a_opts: detachable MONGODB_SESSION_OPT): detachable MONGODB_CLIENT_SESSION
+	start_session (a_opts: detachable MONGODB_SESSION_OPTIONS): detachable MONGODB_CLIENT_SESSION
 			-- Create a session for a sequence of operations.
 			-- By default, sessions are causally consistent.
 			-- Unacknowledged writes are prohibited with sessions.
@@ -874,7 +869,7 @@ feature -- Session
 			is_usable: exists
 		local
 			l_opts: POINTER
-			l_error: BSON
+			l_error: BSON_ERROR
 			l_ptr: POINTER
 		do
 			clean_up
@@ -884,7 +879,7 @@ feature -- Session
 			create l_error.make
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_start_session (item, l_opts, l_error.item)
 			if l_ptr.is_default_pointer then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			else
 				create Result.make_by_pointer (l_ptr)
 			end
@@ -936,7 +931,7 @@ feature -- Handshake
                 l_error.set_error ({MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT,
                                    {MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_HANDSHAKE_FAILED,
                                    "Failed to append handshake data. This operation must be called before any server operations begin and can only be called once.")
-            	create error.make_by_pointer (l_error.item)
+            	set_last_error_with_bson (l_error)
             end
         end
 

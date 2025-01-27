@@ -19,14 +19,18 @@ feature {NONE} -- Initialization
             database: MONGODB_DATABASE
             collection: MONGODB_COLLECTION
             session: MONGODB_CLIENT_SESSION
-            session_opts: MONGODB_SESSION_OPT
-            default_txn_opts: MONGODB_TRANSACTION_OPT
-            txn_opts: MONGODB_TRANSACTION_OPT
+            session_opts: MONGODB_SESSION_OPTIONS
+            default_txn_opts: MONGODB_TRANSACTION_OPTIONS
+            txn_opts: MONGODB_TRANSACTION_OPTIONS
             read_concern: MONGODB_READ_CONCERN
             write_concern: MONGODB_WRITE_CONCERN
             insert_opts: BSON
             l_error: BSON_ERROR
+            context: MONGODB_CONTEXT
         do
+        	create context
+        	context.start
+
             	-- Initialize default URI
             uri_string := "mongodb://127.0.0.1/?appname=transaction-example"
 
@@ -44,11 +48,12 @@ feature {NONE} -- Initialization
             create l_error.make
             collection := database.create_collection ("collection", Void)
             if collection = Void then
-                if attached database.error as err and then err.code = 48 then
-                    -- Collection already exists, get it
+                if attached database.last_error as err and then err.code = 48 then
+                    	-- Collection already exists, get it
                     collection := database.collection ("collection")
                 else
-                    print ("Failed to create collection: " + database.error_string.to_string_8)
+                    print ({STRING_32}"Failed to create collection: " + database.last_call_message + "%N")
+
                     -- Exit with failure
                     {EXCEPTIONS}.die (1)
                 end
@@ -67,7 +72,8 @@ feature {NONE} -- Initialization
             	-- Start session
             session := client.start_session (session_opts)
             if session = Void then
-                print ("Failed to start session: " + client.error_string.to_string_8)
+                print ({STRING_32}"Failed to start session: " + client.last_call_message + "%N")
+
                 {EXCEPTIONS}.die (1)
             end
 
@@ -88,12 +94,13 @@ feature {NONE} -- Initialization
             loop
                 -- Transaction will be retried if it returns False
             end
+            context.finish
         end
 
 feature {NONE} -- Implementation
 
     execute_transaction (session: MONGODB_CLIENT_SESSION;
-                        txn_opts: MONGODB_TRANSACTION_OPT;
+                        txn_opts: MONGODB_TRANSACTION_OPTIONS;
                         collection: MONGODB_COLLECTION;
                         insert_opts: BSON): BOOLEAN
             -- Execute transaction. Returns True if successful, False if should retry
@@ -105,8 +112,9 @@ feature {NONE} -- Implementation
         do
             	-- Start transaction
             session.start_transaction (txn_opts)
-            if session.last_error  then
-                print ("Failed to start transaction: " + session.error_string.to_string_8)
+            if session.error_occurred  then
+                print ({STRING_32}"Failed to start transaction: " + session.last_call_message + "%N")
+
                 Result := True -- Don't retry
                 {EXCEPTIONS}.die (1)
             else
@@ -120,13 +128,15 @@ feature {NONE} -- Implementation
                     doc.bson_append_integer_32 ("_id", i)
                     create reply.make
 					collection.insert_one (doc, insert_opts, reply)
-                    if not collection.last_error  then
-                        print ("Insert failed: " + collection.error_string.to_string_8)
+                    if collection.error_occurred then
+                        print ({STRING_32}"Insert failed: " + collection.last_call_message + "%N")
+
                         session.abort_transaction
 
  	                       -- Check for transient error
 
-                        if collection.error_string.has_substring ("TransientTransactionError") then
+                        if attached {MONGODB_ERROR} collection.last_error as le and then
+                        	le.message.has_substring ("TransientTransactionError") then
                            		-- Retry transaction
                             Result := False
                         else
@@ -151,13 +161,14 @@ feature {NONE} -- Implementation
                     loop
                         create reply.make
                         session.commit_transaction (reply)
-                        if not session.last_error then
+                        if session.last_call_succeed then
                             Result := True -- Success
                         else
-                            print ("Warning: commit failed: " + session.error_string.to_string_8 + "%N")
-                            if session.error_string.has_substring ("TransientTransactionError") then
+                            print ({STRING_32}"Warning commit failed: " + session.last_call_message + "%N")
+
+                            if attached {MONGODB_ERROR} session.last_error as le and then le.message.has_substring ("TransientTransactionError") then
                                 Result := False -- Retry entire transaction
-                            elseif session.error_string.has_substring ("UnknownTransactionCommitResult") then
+                            elseif attached {MONGODB_ERROR} session.last_error as le and then le.message.has_substring ("UnknownTransactionCommitResult") then
                                 	-- Try commit again
                                 Result := False
                             else

@@ -15,43 +15,56 @@ inherit
 
 feature -- Error
 
-	error: detachable BSON_ERROR
-			-- last error.
+	last_error: detachable MONGODB_ERROR
+			-- last error.		
 
-	error_message: detachable STRING_32
-
-	last_error: BOOLEAN
-			-- last_error
-			-- Indicates that there was an error during the last operation
+	error_occurred: BOOLEAN
 		do
-			Result := attached error or attached error_message
+			Result := last_error /= Void
 		end
 
-	error_string: STRING_32
-			-- Output a related error message, for the last operation.
-		require
-			was_error: last_error
+	last_call_succeed: BOOLEAN
 		do
-			if attached {BSON_ERROR} error as l_error then
-				Result := "[Code:" + l_error.code.out + "]" + " [Domain:"+ l_error.domain.out + "]" + " [Message:" + l_error.message.out + "]"
-			elseif attached error_message as l_error_message then
-				Result := l_error_message
-			else
-				Result := "Unknown Error"
+			Result := last_error = Void
+		end
+
+	set_last_error (a_message: STRING_32)
+			-- Set the last error message with `a_message'
+		do
+			create last_error.make (a_message)
+		end
+
+	set_last_error_with_bson (a_error: BSON_ERROR)
+			-- Set the last error message with a_error
+		local
+			l_message: STRING_32
+		do
+			l_message := {STRING_32}"[Code:" + a_error.code.out + "]" + {STRING_32}" [Domain:"+ a_error.domain.out + "]" + {STRING_32}" [Message:" + a_error.message + "]"
+			set_last_error (l_message)
+			if attached last_error as le then
+				le.set_code (a_error.code)
+				le.set_domain (a_error.domain)
 			end
 		end
 
-	set_error_message (a_message: READABLE_STRING_32)
-			-- Set `error_message' with `a_message'
+	last_call_message: STRING_32
+			-- Return the last call message, succeed or error message.
 		do
-			error_message := a_message
+			if last_call_succeed then
+				Result := {STRING_32}"Succeed"
+			else
+				if attached {MONGODB_ERROR} last_error as le then
+					Result := {STRING_32}"Error: " + le.message
+				else
+					Result := {STRING_32}"Error: Unknown"
+				end
+			end
 		end
 
 	clean_up
 			-- Clean up the last error.
 		do
-			error := Void
-			error_message := Void
+			last_error := Void
 		end
 
 end

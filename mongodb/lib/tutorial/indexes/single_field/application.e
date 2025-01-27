@@ -35,8 +35,9 @@ feature {NONE} -- Initialization
 			create reply.make
 
 			collection.create_indexes_with_opts (list, Void, reply)
-			if collection.last_error then
-				print ("Failed to create index: " + collection.error_string.to_string_8 + " %N")
+			if collection.error_occurred then
+				print ({STRING_32}"Failed to create index: " + if attached {MONGODB_ERROR} collection.last_error as le then le.message else {STRING_32}"Unknown" end + "%N")
+
 			else
 				print ("Succesfully created index %N")
 				search (collection)

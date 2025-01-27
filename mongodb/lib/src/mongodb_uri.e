@@ -33,8 +33,8 @@ feature {NONE}-- Initialization
 	make_for_host_port  (a_hostname: READABLE_STRING_8; a_port: NATURAL_16)
 			-- Creates a new URI based on the hostname `a_hostname' and port `a_port' provided.
 		require
-				hostname_not_empty: not a_hostname.is_empty
-				valid_port: a_port > 0
+			hostname_not_empty: not a_hostname.is_empty
+			valid_port: a_port > 0
 		do
 			new_for_host_port (a_hostname, a_port)
 		end
@@ -55,7 +55,7 @@ feature {NONE} -- Implementation
 			if l_ptr /= default_pointer then
 				make_by_pointer (l_ptr)
 			else
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -73,7 +73,7 @@ feature {NONE} -- Implementation
 			if l_ptr /= default_pointer then
 				make_by_pointer (l_ptr)
 			else
-				set_error_message ("Failed to create URI for host: " + a_hostname + " and port: " + a_port.out)
+				set_last_error ("Failed to create URI for host: " + a_hostname + " and port: " + a_port.out)
 			end
 		end
 
@@ -279,10 +279,10 @@ feature -- Access
             is_useful: exists
             option_not_empty: not a_option.is_empty
         local
-            c_string_option: C_STRING
+            c_string_option: NATIVE_STRING
             c_string_fallback: C_STRING
             l_ptr: POINTER
-            c_result: C_STRING
+            c_result: NATIVE_STRING
         do
             clean_up
             create c_string_option.make (a_option)
@@ -294,8 +294,8 @@ feature -- Access
             end
 
             if not l_ptr.is_default_pointer then
-                create c_result.make_by_pointer (l_ptr)
-                Result := c_result.string
+                create c_result.make_from_pointer (l_ptr)
+                Result := {UTF_CONVERTER}.utf_32_string_to_utf_8_string_8 (c_result.string)
             end
         end
 
@@ -353,7 +353,7 @@ feature -- Access
 			end
 		end
 
-	read_prefs: detachable MONGODB_READ_PREFERENCE
+	read_prefs: detachable MONGODB_READ_PREFERENCES
 			-- Fetches a read preference that is owned by the URI instance.
 			-- This read preference is configured based on URI parameters.
 			-- Returns Void if no read preferences are provided.
@@ -639,7 +639,7 @@ feature -- Element Change
 			create c_string.make (a_value)
 			l_res := c_mongoc_uri_set_auth_mechanism (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting auth mechanism with value: [" + a_value + "]")
+				set_last_error ("Error setting auth mechanism with value: [" + a_value + "]")
 			end
 		end
 
@@ -660,7 +660,7 @@ feature -- Element Change
 			create c_string.make (a_value)
 			l_res := c_mongoc_uri_set_auth_source (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting auth source with value: [" + a_value + "]")
+				set_last_error ("Error setting auth source with value: [" + a_value + "]")
 			end
 		end
 
@@ -685,7 +685,7 @@ feature -- Element Change
 				l_res := c_mongoc_uri_set_compressors (item, default_pointer)
 			end
 			if not l_res then
-				set_error_message ("Error setting compressors with value: [" + if attached a_compressors then a_compressors else "Void" end + "]")
+				set_last_error ("Error setting compressors with value: [" + if attached a_compressors then a_compressors else "Void" end + "]")
 			end
 		end
 
@@ -708,7 +708,7 @@ feature -- Element Change
 			create c_string.make (a_database)
 			l_res := c_mongoc_uri_set_database (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting database with value: [" + a_database + "]")
+				set_last_error ("Error setting database with value: [" + a_database + "]")
 			end
 		end
 
@@ -728,7 +728,7 @@ feature -- Element Change
 			clean_up
 			l_res := c_mongoc_uri_set_mechanism_properties (item, a_properties.item)
 			if not l_res then
-				set_error_message ("Error setting mechanism properties with value: [" + a_properties.bson_as_canonical_extended_json + "]")
+				set_last_error ("Error setting mechanism properties with value: [" + a_properties.bson_as_canonical_extended_json + "]")
 			end
 		end
 
@@ -752,7 +752,7 @@ feature -- Element Change
 			create c_string.make (a_option)
 			l_res := c_mongoc_uri_set_option_as_bool (item, c_string.item, a_value)
 			if not l_res then
-				set_error_message ("Error setting boolean option [" + a_option + "] with value: [" + a_value.out + "]")
+				set_last_error ("Error setting boolean option [" + a_option + "] with value: [" + a_value.out + "]")
 			end
 		end
 
@@ -777,7 +777,7 @@ feature -- Element Change
 			create c_string.make (a_option)
 			l_res := c_mongoc_uri_set_option_as_int32 (item, c_string.item, a_value)
 			if not l_res then
-				set_error_message ("Error setting int32 option [" + a_option + "] with value: [" + a_value.out + "]")
+				set_last_error ("Error setting int32 option [" + a_option + "] with value: [" + a_value.out + "]")
 			end
 		end
 
@@ -804,7 +804,7 @@ feature -- Element Change
 			create c_string.make (a_option)
 			l_res := c_mongoc_uri_set_option_as_int64 (item, c_string.item, a_value)
 			if not l_res then
-				set_error_message ("Error setting int64 option [" + a_option + "] with value: [" + a_value.out + "]")
+				set_last_error ("Error setting int64 option [" + a_option + "] with value: [" + a_value.out + "]")
 			end
 		end
 
@@ -830,7 +830,7 @@ feature -- Element Change
 			create c_string_value.make (a_value)
 			l_res := c_mongoc_uri_set_option_as_utf8 (item, c_string_option.item, c_string_value.item)
 			if not l_res then
-				set_error_message ("Error setting utf8 option [" + a_option + "] with value: [" + a_value + "]")
+				set_last_error ("Error setting utf8 option [" + a_option + "] with value: [" + a_value + "]")
 			end
 		end
 
@@ -851,7 +851,7 @@ feature -- Element Change
 			create c_string.make (a_password)
 			l_res := c_mongoc_uri_set_password (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting password with value: [" + a_password + "]")
+				set_last_error ("Error setting password with value: [" + a_password + "]")
 			end
 		end
 
@@ -867,7 +867,7 @@ feature -- Element Change
 			c_mongoc_uri_set_read_concern (item, a_read_concern.item)
 		end
 
-	set_read_preferences (a_prefs: MONGODB_READ_PREFERENCE)
+	set_read_preferences (a_prefs: MONGODB_READ_PREFERENCES)
 			-- Sets a MongoDB URI's read preferences, after the URI has been parsed from a string.
 		note
 			EIS: "name=mongoc_uri_set_read_prefs_t", "src=http://mongoc.org/libmongoc/current/mongoc_uri_set_read_prefs_t.html", "protocol=uri"
@@ -897,7 +897,7 @@ feature -- Element Change
 			create c_string.make (a_value)
 			l_res := c_mongoc_uri_set_server_monitoring_mode (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting server monitoring mode with value: [" + a_value + "]")
+				set_last_error ("Error setting server monitoring mode with value: [" + a_value + "]")
 			end
 		end
 
@@ -918,7 +918,7 @@ feature -- Element Change
 			create c_string.make (a_username)
 			l_res := c_mongoc_uri_set_username (item, c_string.item)
 			if not l_res then
-				set_error_message ("Error setting username with value: [" + a_username + "]")
+				set_last_error ("Error setting username with value: [" + a_username + "]")
 			end
 		end
 
@@ -957,7 +957,7 @@ feature {NONE} -- Measurement
 		end
 
 
-feature {NONE} -- C externals
+feature {MONGODB_EXTERNALS_ACCESS} -- C externals
 
 	c_mongoc_uri_new (a_uri: POINTER): POINTER
 		external

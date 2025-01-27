@@ -40,7 +40,7 @@ feature -- Removal
 
 feature -- Access: Query
 
-	find_with_opts (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE): MONGODB_CURSOR
+	find_with_opts (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES): MONGODB_CURSOR
 			-- 'a_filter': A bson_t containing the query to execute.
 			-- 'a_opts:' An optional bson_t query options, including sort order and which fields to return
 			-- 'a_read_prefs': An optional reading preferences.
@@ -111,13 +111,13 @@ feature -- Access: Query
 			)
 
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
 
     find_and_modify_with_opts (a_query: BSON;
-                              a_opts: MONGODB_FIND_AND_MODIFY_OPTS;
+                              a_opts: MONGODB_FIND_AND_MODIFY_OPTIONS;
                               a_reply: BSON)
             -- Update and return an object.
             -- Parameters:
@@ -130,7 +130,7 @@ feature -- Access: Query
         note
             EIS: "name=mongoc_collection_find_and_modify_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_collection_find_and_modify_with_opts.html", "protocol=uri"
         require
-            exists: exists
+            is_useful: exists
         local
             l_error: BSON_ERROR
             l_res: BOOLEAN
@@ -147,11 +147,11 @@ feature -- Access: Query
             )
 
             if not l_res then
-                create error.make_by_pointer (l_error.item)
+                set_last_error_with_bson (l_error)
             end
         end
 
-	count_documents (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON): INTEGER_64
+	count_documents (a_filter: BSON; a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES; a_reply: BSON): INTEGER_64
 			-- Count documents matching `a_filter` with optional parameters `a_opts`.
 			-- This is the recommended way to count documents (over the deprecated count).
 		note
@@ -174,11 +174,11 @@ feature -- Access: Query
 			create l_error.make
 			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_count_documents (item, a_filter.item, l_opts, l_prefs, a_reply.item, l_error.item)
 			if Result < 0 then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-	estimated_document_count (a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON): INTEGER_64
+	estimated_document_count (a_opts: detachable BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES; a_reply: BSON): INTEGER_64
 			-- Get an estimate of the count of documents in the collection.
 			-- This operation is faster than count_documents but less accurate.
 		note
@@ -200,7 +200,7 @@ feature -- Access: Query
 			create l_error.make
 			Result := {MONGODB_EXTERNALS}.c_mongoc_collection_estimated_document_count (item, l_opts, l_prefs, a_reply.item, l_error.item)
 			if Result < 0 then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -248,12 +248,15 @@ feature -- Command
 			-- a_reply: Optional. An uninitialized bson_t populated with the insert result.
 		note
 			EIS: "name=mongoc_collection_insert_one", "src=http://mongoc.org/libmongoc/current/mongoc_collection_insert_one.html", "protocol=uri"
+		require
+			is_useful: exists
 		local
 			l_opts: POINTER
 			l_reply: POINTER
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -265,7 +268,7 @@ feature -- Command
 			if l_res then
 				-- do nothing
 			else
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -275,6 +278,8 @@ feature -- Command
 			--reply: Optional. An uninitialized bson_t populated with the insert result, or NULL.
 		note
 			EIS: "name=mongoc_collection_insert_one", "src=http://mongoc.org/libmongoc/current/mongoc_collection_insert_many.html", "protocol=uri"
+		require
+			is_useful: exists
 		local
 			l_opts: POINTER
 			l_reply: POINTER
@@ -283,6 +288,7 @@ feature -- Command
 			l_item: MANAGED_POINTER
 			l_res: BOOLEAN
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -307,7 +313,7 @@ feature -- Command
 			if l_res then
 				-- do nothing
 			else
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -319,12 +325,15 @@ feature -- Command
 			-- This feature updates at most one document in collection that matches selector `a_selector'.
 		note
 			EIS: "name=mongoc_collection_update_one","src=http://mongoc.org/libmongoc/current/mongoc_collection_update_one.html", "protocol=uri"
+		require
+			is_useful: exists
 		local
 			l_opts: POINTER
 			l_reply: POINTER
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -336,7 +345,7 @@ feature -- Command
 			if l_res then
 				-- do nothing
 			else
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -345,12 +354,15 @@ feature -- Command
 			-- Update all documents matching `a_selector`
 		note
 			EIS: "name=mongoc_collection_update_many", "src=http://mongoc.org/libmongoc/current/mongoc_collection_update_many.html", "protocol=uri"
+		require
+			is_useful: exists
 		local
 			l_opts: POINTER
 			l_reply: POINTER
 			l_error: BSON_ERROR
 			l_res: BOOLEAN
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -360,7 +372,7 @@ feature -- Command
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_update_many (item, a_selector.item, a_update.item, l_opts, l_reply, l_error.item)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -389,7 +401,7 @@ feature -- Command
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_delete_one (item, a_selector.item, l_opts, l_reply, l_error.item)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -425,11 +437,11 @@ feature -- Command
 				l_error.item    	-- error
 			)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-	command_simple (command: BSON; read_prefs: detachable MONGODB_READ_PREFERENCE; a_reply: BSON)
+	command_simple (command: BSON; read_prefs: detachable MONGODB_READ_PREFERENCES; a_reply: BSON)
 			-- Execute a command on the collection.
 			-- `command`: A BSON containing the command to execute
 			-- `read_prefs`: Optional read preferences
@@ -459,11 +471,11 @@ feature -- Command
 			)
 
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-    command_with_opts (a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCE;
+    command_with_opts (a_command: BSON; a_read_prefs: detachable MONGODB_READ_PREFERENCES;
                       a_opts: detachable BSON; a_reply: BSON)
             -- Execute a command on the server, interpreting opts according to the MongoDB server version.
             -- Note: This is not considered a retryable read operation.
@@ -506,7 +518,7 @@ feature -- Command
             )
 
             if not l_res then
-                create error.make_by_pointer (l_error.item)
+                set_last_error_with_bson (l_error)
             end
         end
 
@@ -531,7 +543,7 @@ feature -- Command
 
 feature -- Aggregation
 
-	aggregate (a_pipeline: BSON; a_opts: detachable BSON; a_read_pref: detachable MONGODB_READ_PREFERENCE ): MONGODB_CURSOR
+	aggregate (a_pipeline: BSON; a_opts: detachable BSON; a_read_pref: detachable MONGODB_READ_PREFERENCES ): MONGODB_CURSOR
 			-- Execute an aggregation framework pipeline using `a_pipeline`.
 			-- Returns a cursor to the result set.
 		note
@@ -582,6 +594,7 @@ feature -- Indexes
 			l_pos: INTEGER
 			l_item: MANAGED_POINTER
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -615,7 +628,7 @@ feature -- Indexes
 			)
 
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -623,12 +636,14 @@ feature -- Indexes
 			-- Drop the index named `a_index_name` from the collection.
 			-- If the operation fails, sets the error which can be checked with `has_error`.
 		require
+			is_useful: exists
 			valid_index_name: not a_index_name.is_empty
 		local
 			l_error: BSON_ERROR
 			l_c_string: C_STRING
 			l_res: BOOLEAN
 		do
+			clean_up
 			create l_c_string.make (a_index_name)
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_drop_index (
@@ -637,7 +652,7 @@ feature -- Indexes
 				l_error.item        -- error
 			)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -652,9 +667,12 @@ feature -- Indexes
 			--   a_opts: Optional additional options for the operation
 		note
 			EIS: "name=mongoc_collection_find_indexes_with_opts", "src=http://mongoc.org/libmongoc/current/mongoc_collection_find_indexes_with_opts.html", "protocol=uri"
+		require
+			is_useful: exists
 		local
 			l_opts: POINTER
 		do
+			clean_up
 			if attached a_opts then
 				l_opts := a_opts.item
 			end
@@ -686,7 +704,7 @@ feature -- Drop
             create l_error.make
             l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_drop (item, l_error.item)
             if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
             end
         end
 
@@ -709,7 +727,7 @@ feature -- Drop
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_collection_drop_with_opts (item, l_opts, l_error.item)
 			if not l_res then
-				create error.make_by_pointer (l_error.item)
+				set_last_error_with_bson (l_error)
 			end
 		end
 

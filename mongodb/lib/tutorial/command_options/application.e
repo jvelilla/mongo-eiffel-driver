@@ -19,23 +19,27 @@ feature {NONE} -- Initialization
     make
             -- Run the example
         local
+        	l_context: MONGODB_CONTEXT
             l_client: MONGODB_CLIENT
             l_uri: MONGODB_URI
             l_cmd, l_opts: BSON
             l_write_concern: MONGODB_WRITE_CONCERN
-            l_read_prefs: MONGODB_READ_PREFERENCE
+            l_read_prefs: MONGODB_READ_PREFERENCES
             l_read_concern: MONGODB_READ_CONCERN
             l_reply: BSON
             l_uri_string: STRING
             l_json: STRING
             l_read_mode: MONGODB_READ_MODE_ENUM
         do
+        	create l_context
+        	l_context.start
+        		-- TODO review this code
             	-- Initialize default URI if none provided
             l_uri_string := "mongodb://127.0.0.1/?appname=client-example"
 
             	-- Create URI and client
             create l_uri.make (l_uri_string)
-            if not l_uri.last_error then
+            if l_uri.last_call_succeed then
                 create l_client.make_from_uri (l_uri)
 
                 	-- Set error API version
@@ -56,8 +60,8 @@ feature {NONE} -- Initialization
                 	-- Execute write command
                 create l_reply.make
                 l_client.write_command_with_opts ("test", l_cmd, l_opts, l_reply)
-                if l_client.last_error then
-                    print ("cloneCollectionAsCapped error: " + l_client.error_string.to_string_8 + "%N")
+                if l_client.error_occurred then
+                    print ({STRING_32}"Error cloneCollectionAsCapped: " + l_client.last_call_message + "%N")
                 else
                 	l_json := l_reply.bson_as_canonical_extended_json
                     print ("cloneCollectionAsCapped: " + l_json + "%N")
@@ -86,16 +90,17 @@ feature {NONE} -- Initialization
                 	-- Execute read command
                 create l_reply.make
                 l_client.read_command_with_opts ("test", l_cmd, l_read_prefs, l_opts, l_reply)
-                if l_client.last_error then
-                	print ("distinct error: " + l_client.error_string.to_string_8 + "%N")
+                if l_client.error_occurred then
+                	print ({STRING_32}"distinct error: " + l_client.last_call_message + "%N")
                 else
                     l_json := l_reply.bson_as_canonical_extended_json
                     print ("distinct: " + l_json + "%N")
                 end
 
             else
-                print ("Failed to parse URI: " + l_uri.error_string.to_string_8 + "%N")
+                print ({STRING_32}"Failed to parse URI: " + l_uri.last_call_message + "%N")
             end
+            l_context.finish
         end
 
 end

@@ -37,7 +37,7 @@ feature -- Removal
 
 feature -- Transaction Operations
 
-	start_transaction (a_opts: detachable MONGODB_TRANSACTION_OPT)
+	start_transaction (a_opts: detachable MONGODB_TRANSACTION_OPTIONS)
 			-- Start a multi-document transaction for all following operations in this session.
 			-- Any options provided in `opts` override options passed to session options default transaction opts,
 			-- and options inherited from the MongoDB client.
@@ -58,7 +58,7 @@ feature -- Transaction Operations
 			end
 			l_res := c_mongoc_client_session_start_transaction (item, l_opts, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -83,7 +83,7 @@ feature -- Transaction Operations
 			end
 			l_res := c_mongoc_client_session_commit_transaction (item, l_reply, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -104,7 +104,7 @@ feature -- Transaction Operations
 			create l_error.make
 			l_res := c_mongoc_client_session_abort_transaction (item, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -195,7 +195,7 @@ feature -- Operations
 			create l_error.make
 			l_res := c_mongoc_client_session_append (item, a_opts.item, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -235,7 +235,7 @@ feature -- Access
 		do
 			clean_up
 			l_ptr := c_mongoc_client_session_get_cluster_time (item)
-			if l_ptr /= default_pointer then
+			if not l_ptr.is_default_pointer then
 				create Result.make_by_pointer (l_ptr)
 			end
 		end
@@ -260,7 +260,7 @@ feature -- Access
 			Result.put (l_increment, 2)
 		end
 
-	options: MONGODB_SESSION_OPT
+	options: MONGODB_SESSION_OPTIONS
 			-- Get a reference to the session options with which this session was configured.
 			-- Note: The returned options are valid only for the lifetime of the session.
 		note

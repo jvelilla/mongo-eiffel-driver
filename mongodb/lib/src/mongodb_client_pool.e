@@ -16,7 +16,6 @@ create
 
 feature {NONE} -- Initialization
 
-
 	make_from_uri (a_uri: MONGODB_URI)
 			-- Create a new pool using the uri `a_uri'.
 		local
@@ -26,10 +25,10 @@ feature {NONE} -- Initialization
 			create l_error.make
 				-- https://mongoc.org/libmongoc/current/mongoc_client_pool_new_with_error.html
 			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_pool_new_with_error (a_uri.item, l_error.item)
-			if l_ptr /= default_pointer then
-				make_by_pointer (l_ptr)
+			if l_ptr.is_default_pointer then
+				set_last_error_with_bson (l_error)
 			else
-				error := l_error
+				make_by_pointer (l_ptr)
 			end
 		end
 
@@ -49,16 +48,27 @@ feature -- Access
 			-- was pop or try_pop called?	
 
 
-	pop: MONGODB_CLIENT
+	pop: detachable MONGODB_CLIENT
 			-- Retrieve a MONGODB_CLIENT from the client pool or create one, possibly blocking until one is available.
+			-- Note: the total number of clients that can be created form this pool is limited by the URI option `maxPoolSize`
+			-- default = 100
+			-- If this number of clients has been created and all are in use, `pop` blocks until another thread returns a client
+			-- with `push`.
+			-- If the `waitQueueTimeoutMS` URI option was specified with a positive value,
+			-- then `pop` will return NULL when the timeout expires.
 		note
 			EIS: "name=mongoc_client_pool_pop", "src=http://mongoc.org/libmongoc/current/mongoc_client_pool_pop.html", "protocol=uri"
 		require
 			is_usable: exists
+		local
+			l_ptr: POINTER
 		do
 			clean_up
 			has_pop := True
-			create Result.make_by_pointer ({MONGODB_EXTERNALS}.c_mongoc_client_pool_pop (item))
+			l_ptr := {MONGODB_EXTERNALS}.c_mongoc_client_pool_pop (item)
+			if not l_ptr.is_default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
 		end
 
 	try_pop: detachable MONGODB_CLIENT
@@ -85,7 +95,7 @@ feature -- Access
 		require
 			is_usable: exists
 		do
-			has_pop := False
+			clean_up
 			{MONGODB_EXTERNALS}.c_mongoc_client_pool_push (item, a_client.item)
 		end
 
@@ -116,7 +126,7 @@ feature -- Settings
 					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_HANDSHAKE_FAILED,
 					"Failed to set application name. This operation must be called before any client operations begin and can only be called once."
 				)
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
@@ -144,10 +154,9 @@ feature -- Settings
 					{MONGODB_ERROR_CODE}.MONGOC_ERROR_CLIENT_SESSION_FAILURE,  -- Code: Session/configuration failure
 					"Failed to set error API version. This operation must be called before any client operations begin and can only be called once."
 				)
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
-
 
 	set_max_size (a_max_pool_size: NATURAL_32)
 			-- Sets the maximum number of pooled connections available from the pool.
@@ -176,11 +185,11 @@ feature -- Settings
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_pool_set_server_api (item, a_api.item, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
-	set_ssl_opts (a_opts: MONGODB_SSL_OPTS)
+	set_ssl_opts (a_opts: MONGODB_SSL_OPTIONS)
 			-- Set SSL options for all clients in the pool.
 			-- This function ensures that all clients retrieved from `pop` or `try_pop`
 			-- are configured with the same SSL settings.
@@ -214,7 +223,7 @@ feature -- Encryption
 			-- Note: Enabling automatic encryption reduces the maximum message size and may have a negative performance impact.
 			-- Parameters:
 			--   a_opts: Required encryption options
-			-- Returns: True if successful, False and sets error otherwise.
+			-- Write an error if there is something wrong.
 		note
 			eis: "name=enable_auto_encryption", "src=https://mongoc.org/libmongoc/current/mongoc_client_pool_enable_auto_encryption.html", "protocol=uri"
 		require
@@ -228,7 +237,7 @@ feature -- Encryption
 			create l_error.make
 			l_res := {MONGODB_EXTERNALS}.c_mongoc_client_pool_enable_auto_encryption (item, a_opts.item, l_error.item)
 			if not l_res then
-				error := l_error
+				set_last_error_with_bson (l_error)
 			end
 		end
 
